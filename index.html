@@ -1,0 +1,305 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Уличные Гонки 2012</title>
+    <style>
+        body { background: #111; color: #eee; font-family: 'Arial', sans-serif; margin: 0; text-align: center; }
+        .header { background: #222; padding: 15px; border-bottom: 3px solid #f00; display: flex; justify-content: center; gap: 20px; font-size: 14px; font-weight: bold; }
+        .money { color: #2ecc71; } .fuel { color: #f1c40f; } .lvl { color: #3498db; }
+        .nav { background: #333; padding: 10px; display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; }
+        .nav button { padding: 10px 15px; cursor: pointer; background: #444; color: #fff; border: 1px solid #555; font-weight: bold; font-size: 12px; }
+        .nav button.active { background: #f00; border-color: #f00; }
+        .screen { display: none; padding: 20px; animation: fadeIn 0.3s; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ГАРАЖ */
+        .garage-container { position: relative; width: 800px; margin: 0 auto; }
+        .garage-bg { width: 800px; height: 400px; background: url('images/garage.jpg') no-repeat center; background-size: cover; border: 4px solid #333; border-radius: 15px; position: relative; overflow: hidden; }
+        
+        /* ОБЩИЙ СТИЛЬ ДЛЯ КАРТИНКИ АВТО */
+        .car-img { 
+            position: absolute; left: 50%; transform: translateX(-50%); 
+            filter: drop-shadow(0 15px 10px rgba(0,0,0,0.6)); transition: width 0.3s, bottom 0.3s, filter 0.2s; 
+        }
+
+        .arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,0,0,0.7); color: white; border: none; font-size: 40px; padding: 10px 20px; cursor: pointer; z-index: 10; border-radius: 5px; }
+        .arrow-left { left: -60px; } .arrow-right { right: -60px; }
+
+        /* ПРЕВЬЮ В ТЮНИНГЕ */
+        .tuning-preview { width: 800px; height: 300px; margin: 20px auto; position: relative; background: radial-gradient(circle, #333 0%, #111 70%); border-radius: 15px; border: 1px solid #444; overflow: hidden; }
+
+        /* ЦВЕТА */
+        .color-picker { background: #222; border: 2px solid #333; padding: 15px; border-radius: 10px; margin-top: 20px; }
+        .color-list { display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
+        .color-btn { width: 35px; height: 35px; border-radius: 50%; border: 3px solid #444; cursor: pointer; transition: 0.2s; }
+        .color-btn.active { border-color: #f1c40f; transform: scale(1.1); box-shadow: 0 0 10px #f1c40f; }
+
+        /* СТАТИСТИКА И КАРТОЧКИ */
+        .stats-dashboard, .rating-columns { display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; max-width: 1000px; margin-left: auto; margin-right: auto; }
+        .stat-item, .rating-card { background: #222; border: 1px solid #333; padding: 12px; border-radius: 8px; min-width: 120px; }
+        .stat-val, .rank-val { display: block; font-size: 18px; font-weight: bold; color: #f1c40f; margin-top: 5px; }
+        .stat-label, .rank-name { font-size: 11px; color: #888; text-transform: uppercase; }
+        
+        .rating-column { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        .rating-card { border-left: 4px solid #555; text-align: left; position: relative; }
+        .rating-card.player-card { border-color: #f1c40f; background: rgba(241, 196, 15, 0.05); }
+
+        .card-container { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 20px; }
+        .card { background: #222; border: 2px solid #444; padding: 15px; width: 200px; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
+        .img-wrapper { width: 100%; height: 100px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; background: rgba(0,0,0,0.2); border-radius: 5px; overflow: hidden; }
+        .img-wrapper img { max-width: 90%; max-height: 90%; object-fit: contain; }
+        
+        #screen-market .card { width: 300px; }
+        #screen-market .img-wrapper { height: 140px; }
+
+        .btn-action { width: 100%; padding: 12px; margin-top: auto; background: #e74c3c; color: #fff; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; }
+        .btn-action:disabled { background: #444; cursor: default; color: #888; }
+
+        #race-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; }
+        .modal-content { background: #222; padding: 30px; border: 2px solid #f00; border-radius: 15px; width: 600px; }
+        .race-card-modal { background: #333; padding: 15px; width: 230px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; }
+        .race-shake { animation: shakeAnim 0.1s infinite; }
+        @keyframes shakeAnim { 0% { transform: translate(2px, 1px); } 50% { transform: translate(-2px, -1px); } 100% { transform: translate(1px, -2px); } }
+    </style>
+</head>
+<body>
+
+    <div id="race-modal">
+        <div class="modal-content">
+            <h2>Подготовка к заезду</h2>
+            <div style="display: flex; justify-content: space-around; align-items: center; margin: 20px 0;">
+                <div id="my-race-card" class="race-card-modal"></div>
+                <div style="font-size: 30px; font-weight: bold; color: #f00;">VS</div>
+                <div id="enemy-race-card" class="race-card-modal"></div>
+            </div>
+            <div id="pre-race-result" style="font-size: 24px; margin: 15px 0; font-weight: bold; min-height: 35px;"></div>
+            <button class="btn-action" id="confirm-race-btn">УЧАСТВОВАТЬ!</button>
+            <button onclick="closeRace()" style="background:none; border:none; color:#888; cursor:pointer; margin-top:10px; text-decoration: underline;">Назад</button>
+        </div>
+    </div>
+
+    <div class="header">
+        <div>🚗 <span id="curName">...</span></div>
+        <div class="money">💰 <span id="moneyText">0</span> $</div>
+        <div class="lvl">⭐ Ур. <span id="lvlText">1</span> (<span id="xpText">0 / 100</span> XP)</div>
+        <div>⚡ <span id="hpText">0</span> л.с.</div>
+        <div>⛽ Бензин: <span id="fuelText">0</span>/25</div>
+    </div>
+
+    <div class="nav">
+        <button id="nav-garage" class="active" onclick="showScreen('garage')">ГАРАЖ</button>
+        <button id="nav-shop" onclick="showScreen('shop')">ТЮНИНГ</button>
+        <button id="nav-market" onclick="showScreen('market')">АВТОСАЛОН</button>
+        <button id="nav-race" onclick="showScreen('race')">ГОНКИ</button>
+        <button id="nav-rating" onclick="showScreen('rating')">РЕЙТИНГ</button>
+    </div>
+
+    <div id="screen-garage" class="screen active">
+        <div class="garage-container">
+            <button class="arrow arrow-left" onclick="prevCar()"><</button>
+            <div class="garage-bg"><img src="" id="mainCar" class="car-img"></div>
+            <button class="arrow arrow-right" onclick="nextCar()">></button>
+        </div>
+        <h2 id="garageTitle">Твой гараж</h2>
+        <div class="stats-dashboard">
+            <div class="stat-item"><span class="stat-label">Заездов</span><span id="st-total" class="stat-val">0</span></div>
+            <div class="stat-item"><span class="stat-label">Побед</span><span id="st-wins" class="stat-val">0</span></div>
+            <div class="stat-item"><span class="stat-label">Поражений</span><span id="st-losses" class="stat-val">0</span></div>
+            <div class="stat-item"><span class="stat-label">Заработано</span><span id="st-earned" class="stat-val">0 $</span></div>
+            <div class="stat-item"><span class="stat-label">Потрачено</span><span id="st-spent" class="stat-val">0 $</span></div>
+        </div>
+    </div>
+
+    <div id="screen-rating" class="screen">
+        <div class="rating-columns">
+            <div class="rating-column"><h3>Мощность</h3><div id="hp-rank-list"></div></div>
+            <div class="rating-column"><h3>Уровень</h3><div id="lvl-rank-list"></div></div>
+        </div>
+    </div>
+
+    <div id="screen-shop" class="screen">
+        <h2>Мастерская</h2>
+        <div class="card-container" id="shop-items"></div>
+        
+        <div class="color-picker">
+            <h3>Внешний вид (Цвет кузова)</h3>
+            <div class="color-list" id="color-list-body">
+                <!-- Значения hue-rotate подобраны точнее -->
+                <div class="color-btn" style="background:#fff" onclick="changeColor(0)" title="Заводской"></div>
+                <div class="color-btn" style="background:#f00" onclick="changeColor(350)" title="Красный"></div>
+                <div class="color-btn" style="background:#0f0" onclick="changeColor(90)" title="Зеленый"></div>
+                <div class="color-btn" style="background:#00f" onclick="changeColor(210)" title="Синий"></div>
+                <div class="color-btn" style="background:#f1c40f" onclick="changeColor(45)" title="Золотой"></div>
+                <div class="color-btn" style="background:#a29bfe" onclick="changeColor(280)" title="Фиолетовый"></div>
+            </div>
+            <div class="tuning-preview">
+                <img src="" id="tuningCarImg" class="car-img">
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-market" class="screen">
+        <h2>Автосалон</h2>
+        <div class="card-container" id="market-items"></div>
+    </div>
+
+    <div id="screen-race" class="screen">
+        <h2>Уличные гонки</h2>
+        <button class="btn-action" style="width: 200px; margin-bottom: 15px; background: #3498db;" onclick="generateEnemies()">ОБНОВИТЬ СПИСОК</button>
+        <div class="card-container" id="race-enemies"></div>
+    </div>
+
+    <script>
+        const sounds = { click: new Audio('sounds/click.mp3'), engine: new Audio('sounds/engine.mp3') };
+        function playSfx(type) { const sfx = sounds[type]; if (sfx) { sfx.currentTime = 0; sfx.play().catch(e => {}); } }
+
+        const carsData = {
+            'vaz2108': { name: 'ВАЗ 2108', hp: 70, price: 0, minLvl: 1, img: 'images/car.png', width: '450px', bottom: '30px', priceMult: 1.0 },
+            'oka':     { name: 'СеАЗ Ока',  hp: 35, price: 500, minLvl: 1, img: 'images/oka.png', width: '360px', bottom: '60px', priceMult: 0.7 },
+            'priora':  { name: 'Lada Priora', hp: 98, price: 1800, minLvl: 3, img: 'images/priora.png', width: '520px', bottom: '60px', priceMult: 1.1 },
+            'granta':  { name: 'Lada Granta', hp: 106, price: 2500, minLvl: 5, img: 'images/granta.png', width: '450px', bottom: '1px', priceMult: 1.2 },
+            'supra':   { name: 'Toyota Supra', hp: 280, price: 15000, minLvl: 10, img: 'images/supra.png', width: '560px', bottom: '30px', priceMult: 1.8 }
+        };
+
+        const allParts = [
+            { id: 'turbo', name: 'Турбина', baseHp: 25, basePrice: 600 },
+            { id: 'chip', name: 'Чип-тюнинг', baseHp: 12, basePrice: 300 },
+            { id: 'exhaust', name: 'Выхлоп', baseHp: 8, basePrice: 200 },
+            { id: 'cooler', name: 'Интеркулер', baseHp: 15, basePrice: 450 },
+            { id: 'intake', name: 'Впуск', baseHp: 10, basePrice: 250 },
+            { id: 'fuel', name: 'Топливная', baseHp: 20, basePrice: 500 }
+        ];
+
+        const bots = [
+            { name: "Turbo_Gleb", hp: 550, lvl: 30 },
+            { name: "Sanya_Racer", hp: 220, lvl: 15 },
+            { name: "Dimon777", hp: 160, lvl: 8 },
+            { name: "Night_Wolf", hp: 130, lvl: 5 },
+            { name: "Vano_Vaz", hp: 90, lvl: 2 }
+        ];
+
+        let player = JSON.parse(localStorage.getItem('sr_player')) || {
+            money: 500, fuel: 25, lvl: 1, xp: 0, currentCarId: 'vaz2108', ownedCars: ['vaz2108'],
+            carStats: {}, stats: { races: 0, wins: 0, losses: 0, earned: 500, spent: 0 }
+        };
+
+        function calculateCarHp(carId) {
+            const carBase = carsData[carId].hp;
+            const carMods = player.carStats[carId]?.parts || {};
+            let totalAdd = 0;
+            allParts.forEach(p => { totalAdd += p.baseHp * (carMods[p.id] || 0); });
+            return carBase + totalAdd;
+        }
+
+        function updateUI() {
+            const car = carsData[player.currentCarId];
+            const carStats = player.carStats[player.currentCarId] || {};
+            const hue = carStats.color || 0;
+
+            document.getElementById('moneyText').innerText = player.money;
+            document.getElementById('fuelText').innerText = player.fuel;
+            document.getElementById('hpText').innerText = calculateCarHp(player.currentCarId);
+            document.getElementById('curName').innerText = car.name;
+            document.getElementById('lvlText').innerText = player.lvl;
+            document.getElementById('xpText').innerText = player.xp + " / " + (player.lvl * 100);
+            
+            // Обновляем картинки везде
+            const mainImg = document.getElementById('mainCar');
+            const tuningImg = document.getElementById('tuningCarImg');
+            
+            [mainImg, tuningImg].forEach(img => {
+                img.src = car.img; 
+                img.style.width = car.width; 
+                img.style.bottom = car.bottom;
+                img.style.filter = hue === 0 ? "drop-shadow(0 15px 10px rgba(0,0,0,0.6))" : `hue-rotate(${hue}deg) drop-shadow(0 15px 10px rgba(0,0,0,0.6))`;
+            });
+
+            // Подсветка активной кнопки цвета
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                const btnHue = parseInt(btn.getAttribute('onclick').match(/\d+/)[0]);
+                btn.classList.toggle('active', btnHue === hue);
+            });
+
+            document.getElementById('st-total').innerText = player.stats.races;
+            document.getElementById('st-wins').innerText = player.stats.wins;
+            document.getElementById('st-losses').innerText = player.stats.losses;
+            document.getElementById('st-earned').innerText = player.stats.earned + " $";
+            document.getElementById('st-spent').innerText = player.stats.spent + " $";
+            renderAll();
+        }
+
+        function changeColor(hue) {
+            playSfx('click');
+            if (!player.carStats[player.currentCarId]) player.carStats[player.currentCarId] = { parts: {}, color: 0 };
+            player.carStats[player.currentCarId].color = hue;
+            save(); updateUI();
+        }
+
+        function renderAll() {
+            const carId = player.currentCarId;
+            const mult = carsData[carId].priceMult;
+            const shopDiv = document.getElementById('shop-items'); shopDiv.innerHTML = '';
+            allParts.forEach(p => {
+                const curLvl = player.carStats[carId]?.parts?.[p.id] || 0;
+                const nextPrice = Math.floor(p.basePrice * (curLvl + 1) * mult);
+                const isMax = curLvl >= 3;
+                shopDiv.innerHTML += `<div class="card"><h3>${p.name}</h3><p style="color:#f1c40f">Уровень: ${curLvl}/3</p><p>+${p.baseHp} л.с. / ур.</p><p>${isMax ? 'МАКСИМУМ' : 'Цена: ' + nextPrice + '$'}</p><button class="btn-action" ${isMax ? 'disabled' : ''} onclick="buyPart('${p.id}', ${nextPrice})">${isMax ? 'ПРОКАЧАНО' : 'КУПИТЬ'}</button></div>`;
+            });
+
+            const marketDiv = document.getElementById('market-items'); marketDiv.innerHTML = '';
+            Object.keys(carsData).forEach(id => {
+                if (id === 'vaz2108') return;
+                const owned = player.ownedCars.includes(id); const c = carsData[id]; const lvlLock = player.lvl < c.minLvl;
+                marketDiv.innerHTML += `<div class="card"><div class="img-wrapper"><img src="${c.img}"></div><h3>${c.name}</h3><p>База: ${c.hp} л.с.</p><p>${lvlLock ? 'НУЖЕН ' + c.minLvl + ' УР.' : c.price + '$'}</p><button class="btn-action" ${owned || lvlLock ? 'disabled' : ''} onclick="buyCar('${id}')">${owned ? 'КУПЛЕНО' : 'КУПИТЬ'}</button></div>`;
+            });
+
+            const raceDiv = document.getElementById('race-enemies'); raceDiv.innerHTML = '';
+            currentEnemies.forEach((e, idx) => {
+                raceDiv.innerHTML += `<div class="card"><div class="img-wrapper"><img src="${e.img}"></div><h3>${e.name}</h3><p>${e.hp} л.с.</p><button class="btn-action" onclick="openRace(${idx})">ГОНКА</button></div>`;
+            });
+
+            const hpRankDiv = document.getElementById('hp-rank-list'); const lvlRankDiv = document.getElementById('lvl-rank-list');
+            let maxHp = 0; player.ownedCars.forEach(id => { let h = calculateCarHp(id); if(h > maxHp) maxHp = h; });
+            let hpList = [...bots, { name: "ТЫ (Твой макс.)", hp: maxHp, isPlayer: true }].sort((a,b) => b.hp - a.hp);
+            let lvlList = [...bots, { name: "ТЫ (Профиль)", lvl: player.lvl, isPlayer: true }].sort((a,b) => b.lvl - a.lvl);
+            hpRankDiv.innerHTML = ''; lvlRankDiv.innerHTML = '';
+            hpList.forEach((r, i) => { hpRankDiv.innerHTML += `<div class="rating-card ${r.isPlayer ? 'player-card' : ''}"><div class="place-badge">#${i+1}</div><span class="rank-name">${r.name}</span><span class="rank-val">${r.hp} л.с.</span></div>`; });
+            lvlList.forEach((r, i) => { lvlRankDiv.innerHTML += `<div class="rating-card ${r.isPlayer ? 'player-card' : ''}"><div class="place-badge">#${i+1}</div><span class="rank-name">${r.name}</span><span class="rank-val">${r.lvl} уровень</span></div>`; });
+        }
+
+        function nextCar() { playSfx('click'); let idx = player.ownedCars.indexOf(player.currentCarId); idx = (idx + 1) % player.ownedCars.length; player.currentCarId = player.ownedCars[idx]; save(); updateUI(); }
+        function prevCar() { playSfx('click'); let idx = player.ownedCars.indexOf(player.currentCarId); idx = (idx - 1 + player.ownedCars.length) % player.ownedCars.length; player.currentCarId = player.ownedCars[idx]; save(); updateUI(); }
+        function buyPart(id, prc) { playSfx('click'); if (player.money >= prc) { player.money -= prc; player.stats.spent += prc; if (!player.carStats[player.currentCarId]) player.carStats[player.currentCarId] = { parts: {}, color: 0 }; if (!player.carStats[player.currentCarId].parts) player.carStats[player.currentCarId].parts = {}; player.carStats[player.currentCarId].parts[id] = (player.carStats[player.currentCarId].parts[id] || 0) + 1; save(); updateUI(); } }
+        function buyCar(id) { playSfx('click'); const c = carsData[id]; if (player.money >= c.price) { player.money -= c.price; player.stats.spent += c.price; player.ownedCars.push(id); if (!player.carStats[id]) player.carStats[id] = { parts: {}, color: 0 }; save(); updateUI(); showScreen('garage'); } }
+        function openRace(idx) { playSfx('click'); activeIdx = idx; const enemy = currentEnemies[idx]; const myCar = carsData[player.currentCarId]; document.getElementById('race-modal').style.display = 'flex'; document.getElementById('pre-race-result').innerText = ''; document.getElementById('confirm-race-btn').innerText = "УЧАСТВОВАТЬ!"; document.getElementById('my-race-card').innerHTML = `<div class="img-wrapper"><img id="my-race-img" src="${myCar.img}"></div><h3>Твоя тачка</h3>`; document.getElementById('enemy-race-card').innerHTML = `<div class="img-wrapper"><img id="enemy-race-img" src="${enemy.img}"></div><h3>${enemy.name}</h3>`; const myHue = player.carStats[player.currentCarId]?.color || 0; document.getElementById('my-race-img').style.filter = myHue === 0 ? "" : `hue-rotate(${myHue}deg)`; }
+
+        document.getElementById('confirm-race-btn').onclick = function() {
+            if (this.innerText === "ЕЩЁ РАЗ?") { document.getElementById('pre-race-result').innerText = ""; this.innerText = "УЧАСТВОВАТЬ!"; return; }
+            if (player.fuel <= 0) return alert("Бензин на нуле!");
+            playSfx('engine');
+            const myImg = document.getElementById('my-race-img'); const enImg = document.getElementById('enemy-race-img');
+            myImg.classList.add('race-shake'); enImg.classList.add('race-shake'); this.disabled = true;
+            setTimeout(() => {
+                myImg.classList.remove('race-shake'); enImg.classList.remove('race-shake');
+                this.disabled = false; player.fuel--; player.stats.races++;
+                const enemy = currentEnemies[activeIdx];
+                const win = (calculateCarHp(player.currentCarId) + Math.random()*40) > (enemy.hp + Math.random()*40);
+                const res = document.getElementById('pre-race-result');
+                if (win) { player.money += enemy.prize; player.xp += enemy.xp; player.stats.wins++; player.stats.earned += enemy.prize; res.innerText = "ПОБЕДА! +" + enemy.prize + "$"; res.style.color = "lime"; }
+                else { player.xp += 5; player.stats.losses++; res.innerText = "ПРОИГРЫШ!"; res.style.color = "red"; }
+                if (player.xp >= player.lvl * 100) { player.xp = 0; player.lvl++; player.money += 300; player.stats.earned += 300; alert("НОВЫЙ УРОВЕНЬ!"); }
+                this.innerText = "ЕЩЁ РАЗ?"; save(); updateUI();
+            }, 2000);
+        };
+
+        function closeRace() { sounds.engine.pause(); document.getElementById('race-modal').style.display = 'none'; }
+        function showScreen(id) { playSfx('click'); document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active')); document.getElementById('screen-' + id).classList.add('active'); document.getElementById('nav-' + id).classList.add('active'); }
+        function generateEnemies() { const keys = Object.keys(carsData); currentEnemies = []; for(let i=0; i<3; i++) { let rKey = keys[Math.floor(Math.random()*keys.length)]; let mod = carsData[rKey]; let enemyHp = Math.floor(mod.hp + (Math.random()*80-20)); currentEnemies.push({ name: mod.name, img: mod.img, hp: enemyHp, prize: Math.floor(enemyHp/1.5), xp: Math.floor(enemyHp/5) }); } renderAll(); }
+        function save() { localStorage.setItem('sr_player', JSON.stringify(player)); }
+        setInterval(() => { if(player.fuel < 25){ player.fuel++; save(); updateUI(); } }, 180000);
+        generateEnemies(); updateUI();
+    </script>
+</body>
+</html>
