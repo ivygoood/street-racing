@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Уличные Гонки</title>
+    <title>Уличные Гонки 2012</title>
     <style>
         body { background: #111; color: #eee; font-family: 'Arial', sans-serif; margin: 0; text-align: center; }
         .header { background: #222; padding: 15px; border-bottom: 3px solid #f00; display: flex; justify-content: center; gap: 20px; font-size: 14px; font-weight: bold; }
@@ -83,6 +83,7 @@
     <div class="header">
         <div>🚗 <span id="curName">...</span></div>
         <div class="money">💰 <span id="moneyText">0</span> $</div>
+        <div style="display: flex; align-items: center; color: #f1c40f; margin: 0 10px;"> <span style="margin-right: 5px;">🧈</span> <span id="goldText">0</span> </div>
         <div class="lvl">⭐ Ур. <span id="lvlText">1</span> (<span id="xpText">0 / 100</span> XP)</div>
         <div>⚡ <span id="hpText">0</span> л.с.</div>
         <div>⛽ Бензин: <span id="fuelText">0</span>/25</div>
@@ -158,14 +159,17 @@
         const carsData = {
             'vaz2108': { name: 'ВАЗ 2109', hp: 70, price: 0, minLvl: 1, img: 'images/car.png', width: '450px', bottom: '30px', priceMult: 1.0 },
             'oka':     { name: 'СеАЗ Ока',  hp: 35, price: 500, minLvl: 1, img: 'images/oka.png', width: '360px', bottom: '60px', priceMult: 0.7 },
+            'vaz2104': { name: 'ВАЗ 2104', hp: 71, price: 900, minLvl: 2, img: 'images/vaz2104.png', width: '480px', bottom: '60px', priceMult: 1.05 },
             'vaz2114': { name: 'ВАЗ 2114', hp: 77, price: 1100, minLvl: 2, img: 'images/vaz2114.png', width: '480px', bottom: '60px', priceMult: 1.05 },
-            'priora':  { name: 'Lada Priora', hp: 98, price: 1800, minLvl: 3, img: 'images/priora.png', width: '520px', bottom: '60px', priceMult: 1.1 },
-            'granta':  { name: 'Lada Granta', hp: 106, price: 2500, minLvl: 5, img: 'images/granta.png', width: '450px', bottom: '1px', priceMult: 1.2 },
-            'focus':   { name: 'Ford Focus', hp: 125, price: 4500, minLvl: 6, img: 'images/focus.png', width: '400px', bottom: '10px', priceMult: 1.3 },
-            'subaru':  { name: 'Subaru Impreza', hp: 230, price: 12000, minLvl: 8, img: 'images/subaru.png', width: '420px', bottom: '10px', priceMult: 1.6 },
-            'skyline': { name: 'Nissan Skyline', hp: 250, price: 18000, minLvl: 12, img: 'images/skyline.png', width: '560px', bottom: '60px', priceMult: 1.7 },
-            'supra':   { name: 'Toyota Supra', hp: 280, price: 15000, minLvl: 10, img: 'images/supra.png', width: '560px', bottom: '30px', priceMult: 1.8 },
-            'm5':      { name: 'BMW M5 E60', hp: 507, price: 45000, minLvl: 15, img: 'images/m5.png', width: '550px', bottom: '10px', priceMult: 3.1 }
+            'priora':  { name: 'Lada Priora', hp: 98, price: 1800, minLvl: 4, img: 'images/priora.png', width: '520px', bottom: '60px', priceMult: 1.1 },
+            'granta':  { name: 'Lada Granta', hp: 106, price: 2500, minLvl: 6, img: 'images/granta.png', width: '450px', bottom: '1px', priceMult: 1.2 },
+            'focus':   { name: 'Ford Focus', hp: 125, price: 4500, minLvl: 8, img: 'images/focus.png', width: '450px', bottom: '20px', priceMult: 1.3 },
+            'subaru':  { name: 'Subaru Impreza', hp: 333, price: 500, isGold: true, minLvl: 20, img: 'images/subaru.png', width: '470px', bottom: '50px', priceMult: 4.5 },
+            'skyline': { name: 'Nissan Skyline', hp: 250, price: 18000, minLvl: 10, img: 'images/skyline.png', width: '560px', bottom: '60px', priceMult: 1.7 },
+            'supra':   { name: 'Toyota Supra', hp: 280, price: 15000, minLvl: 12, img: 'images/supra.png', width: '560px', bottom: '30px', priceMult: 1.8 },
+            'm5':      { name: 'BMW M5 E60', hp: 350, price: 45000, minLvl: 15, img: 'images/m5.png', width: '550px', bottom: '10px', priceMult: 3.1 },
+            'porsche911': { name: 'Porsche 911 Turbo', hp: 550, price: 185000, minLvl: 22, img: 'images/porsche.png', width: '530px', bottom: '10px', priceMult: 4.8 },
+            'lambo':   { name: 'Lamborghini Aventador', hp: 900, price: 5000, isGold: true, minLvl: 30, img: 'images/lambo.png', width: '600px', bottom: '0.05px', priceMult: 15 }
         };
 
         const allParts = [
@@ -174,7 +178,10 @@
             { id: 'exhaust', name: 'Выхлоп', baseHp: 8, basePrice: 200 },
             { id: 'cooler', name: 'Интеркулер', baseHp: 15, basePrice: 450 },
             { id: 'intake', name: 'Впуск', baseHp: 10, basePrice: 250 },
-            { id: 'fuel', name: 'Топливная', baseHp: 20, basePrice: 500 }
+            { id: 'fuel', name: 'Топливная', baseHp: 20, basePrice: 500 },
+            { id: 'nos_system', name: 'Закись азота (NOS)', baseHp: 60, basePrice: 200, isGold: true },
+            { id: 'forged_engine', name: 'Кованая поршневая', baseHp: 30, basePrice: 400, isGold: true },
+            { id: 'racing_ecu', name: 'ЭБУ', baseHp: 15, basePrice: 300, isGold: true }
         ];
 
         const bots = [
@@ -185,10 +192,19 @@
             { name: "Vano_Vaz", hp: 90, lvl: 2 }
         ];
 
+        const bossesDB = [
+            { id: 0, carName: "Ford Focus", hp: 500, img: "images/focus.png", entryFee: 10, reward: 20 },
+            { id: 1, carName: "BMW M5 E60", hp: 750, img: "images/m5.png", entryFee: 50, reward: 150 },
+            { id: 2, carName: "Nissan Skyline", hp: 1000, img: "images/skyline.png", entryFee: 200, reward: 500 },
+            { id: 3, carName: "Lamborghini Aventador", hp: 1600, img: "images/lambo.png", entryFee: 500, reward: 1000 }
+        ];
+
         let player = JSON.parse(localStorage.getItem('sr_player')) || {
-            money: 500, fuel: 25, lvl: 1, xp: 0, currentCarId: 'vaz2108', ownedCars: ['vaz2108'],
+            money: 500, gold: 10, fuel: 25, lvl: 1, xp: 0, bossLvl: 0, bossWins: 0, currentCarId: 'vaz2108', ownedCars: ['vaz2108'],
             carStats: {}, stats: { races: 0, wins: 0, losses: 0, earned: 500, spent: 0 }
         };
+
+        window.startBossRace = function() { const b = bossesDB[player.bossLvl || 0]; if (!b) return; if (player.gold < b.entryFee) { alert('Нужно больше золота 🧈!'); return; } if (player.fuel < 5) { alert('Нужен бензин ⛽!'); return; } player.gold -= b.entryFee; player.fuel -= 5; const myHp = calculateCarHp(player.currentCarId); const chance = myHp / (myHp + b.hp); if (Math.random() < chance) { player.gold += b.reward; player.bossWins++; if (player.bossWins >= 10) { player.bossWins = 0; player.bossLvl++; alert('БОСС ПОВЕРЖЕН!'); } else { alert('ПОБЕДА!'); } } else { alert('ПОРАЖЕНИЕ!'); } save(); updateUI(); renderAll(); };
 
         function calculateCarHp(carId) {
             const carBase = carsData[carId].hp;
@@ -204,6 +220,7 @@
             const hue = carStats.color || 0;
 
             document.getElementById('moneyText').innerText = player.money;
+            document.getElementById('goldText').innerText = player.gold;
             document.getElementById('fuelText').innerText = player.fuel;
             document.getElementById('hpText').innerText = calculateCarHp(player.currentCarId);
             document.getElementById('curName').innerText = car.name;
@@ -244,26 +261,92 @@
 
         function renderAll() {
             const carId = player.currentCarId;
-            const mult = carsData[carId].priceMult;
-            const shopDiv = document.getElementById('shop-items'); shopDiv.innerHTML = '';
-            allParts.forEach(p => {
-                const curLvl = player.carStats[carId]?.parts?.[p.id] || 0;
-                const nextPrice = Math.floor(p.basePrice * (curLvl + 1) * mult);
-                const isMax = curLvl >= 3;
-                shopDiv.innerHTML += `<div class="card"><h3>${p.name}</h3><p style="color:#f1c40f">Уровень: ${curLvl}/3</p><p>+${p.baseHp} л.с. / ур.</p><p>${isMax ? 'МАКСИМУМ' : 'Цена: ' + nextPrice + '$'}</p><button class="btn-action" ${isMax ? 'disabled' : ''} onclick="buyPart('${p.id}', ${nextPrice})">${isMax ? 'ПРОКАЧАНО' : 'КУПИТЬ'}</button></div>`;
-            });
+            const carData = carsData[carId];
+            if (!carData) return;
+            const mult = carData.priceMult || 1;
+            const shopDiv = document.getElementById('shop-items'); 
+            if (shopDiv) {
+                shopDiv.innerHTML = '';
+        
+                // Разделяем детали на обычные и золотые
+                const normalParts = allParts.filter(p => !p.isGold);
+                const goldParts = allParts.filter(p => p.isGold);
 
-            const marketDiv = document.getElementById('market-items'); marketDiv.innerHTML = '';
-            Object.keys(carsData).forEach(id => {
-                if (id === 'vaz2108') return;
-                const owned = player.ownedCars.includes(id); const c = carsData[id]; const lvlLock = player.lvl < c.minLvl;
-                marketDiv.innerHTML += `<div class="card"><div class="img-wrapper"><img src="${c.img}"></div><h3>${c.name}</h3><p>База: ${c.hp} л.с.</p><p>${lvlLock ? 'НУЖЕН ' + c.minLvl + ' УР.' : c.price + '$'}</p><button class="btn-action" ${owned || lvlLock ? 'disabled' : ''} onclick="buyCar('${id}')">${owned ? 'КУПЛЕНО' : 'КУПИТЬ'}</button></div>`;
-            });
+                // Функция для создания карточки
+                const createCard = (p) => {
+                    const curLvl = player.carStats[carId]?.parts?.[p.id] || 0;
+                    // NOS (nitrous_system) теперь макс 1 уровень, остальные - 3
+                    const maxLvl = p.id === 'nos_system' ? 1 : 3; 
+                    const isMax = curLvl >= maxLvl;
+            
+                    let nextPrice = p.isGold ? Math.floor(p.basePrice * Math.pow(2, curLvl)) : Math.floor(p.basePrice * (curLvl + 1) * mult);
+                    const priceTag = p.isGold ? nextPrice + ' 🧈' : nextPrice + ' $';
 
-            const raceDiv = document.getElementById('race-enemies'); raceDiv.innerHTML = '';
-            currentEnemies.forEach((e, idx) => {
-                raceDiv.innerHTML += `<div class="card"><div class="img-wrapper"><img src="${e.img}"></div><h3>${e.name}</h3><p>${e.hp} л.с.</p><button class="btn-action" onclick="openRace(${idx})">ГОНКА</button></div>`;
-            });
+                    return `<div class="card">
+                        <h3>${p.name}</h3>
+                        <p style="color:#f1c40f">Уровень: ${curLvl}/${maxLvl}</p>
+                        <p>+${p.baseHp} л.с. / ур.</p>
+                        <p style="font-weight:bold; color:${p.isGold ? '#f1c40f' : '#fff'}">${isMax ? 'МАКСИМУМ' : 'Цена: ' + priceTag}</p>
+                        <button class="btn-action" ${isMax ? 'disabled' : ''} onclick="buyPart('${p.id}', ${nextPrice})">${isMax ? 'ПРОКАЧАНО' : 'КУПИТЬ'}</button>
+                    </div>`;
+                };
+
+                // Сначала выводим обычные
+                normalParts.forEach(p => shopDiv.innerHTML += createCard(p));
+        
+                // Добавляем разрыв или заголовок (опционально)
+                shopDiv.innerHTML += `<div style="width: 100%; height: 20px;"></div>`; 
+        
+                // Выводим золотые вниз
+                goldParts.forEach(p => shopDiv.innerHTML += createCard(p));
+            }
+
+            // --- Тут твой старый код Автосалона и Рейтинга без изменений ---
+            const marketDiv = document.getElementById('market-items');
+            if (marketDiv) {
+                marketDiv.innerHTML = '';
+                Object.keys(carsData).forEach(id => {
+                    if (id === 'vaz2108') return;
+                    const c = carsData[id];
+                    const owned = player.ownedCars.includes(id);
+                    const lvlLock = player.lvl < c.minLvl;
+                    const priceHtml = c.isGold ? `<span style="color:#f1c40f">${c.price} 🧈</span>` : `${c.price} $`;
+                    marketDiv.innerHTML += `<div class="card"><div class="img-wrapper"><img src="${c.img}" style="width:${c.width || '90%'}"></div><h3>${c.name}</h3><p>База: ${c.hp} л.с.</p><p style="font-weight:bold">${lvlLock ? `<span style="color:#e74c3c">НУЖЕН ${c.minLvl} УР.</span>` : priceHtml}</p><button class="btn-action" ${owned || lvlLock ? 'disabled' : ''} onclick="buyCar('${id}')">${owned ? 'КУПЛЕНО' : 'КУПИТЬ'}</button></div>`;
+                });
+
+        }
+
+            const raceDiv = document.getElementById('race-enemies');
+                if (raceDiv) {
+                    raceDiv.innerHTML = '';
+    
+                    // Обычные враги
+                    currentEnemies.forEach((e, idx) => {
+                        raceDiv.innerHTML += `
+                            <div class="card">
+                                <div class="img-wrapper"><img src="${e.img}"></div>
+                                <h3>${e.name}</h3><p>${e.hp} л.с.</p>
+                                <button class="btn-action" onclick="openRace(${idx})">ГОНКА</button>
+                            </div>`;
+                    });
+
+                    // Блок Босса
+                    const b = bossesDB[player.bossLvl || 0]; // Добавил || 0 для защиты
+                    if (b) {
+                        raceDiv.innerHTML += `
+                            <div style="width: 100%; margin-top: 30px; border-top: 2px solid #f1c40f; padding-top: 20px; display: inline-block;">
+                                <h2 style="color: #f1c40f;">ЗОЛОТОЙ ТУРНИР</h2>
+                                <div class="card" style="border: 2px solid #f1c40f; margin: 10px auto; width: 300px;">
+                                    <div class="img-wrapper"><img src="${b.img}"></div>
+                                    <h3>${b.carName}</h3>
+                                    <p>${b.hp} л.с.</p>
+                                    <p style="color:#f1c40f">ПОБЕД: ${player.bossWins || 0} / 10</p>
+                                    <button class="btn-action" style="background:#f1c40f; color:#000;" onclick="openBossRace()">БРОСИТЬ ВЫЗОВ</button>
+                                </div>
+                            </div>`;
+                    }
+                }
+        
 
             const hpRankDiv = document.getElementById('hp-rank-list'); const lvlRankDiv = document.getElementById('lvl-rank-list');
             let maxHp = 0; player.ownedCars.forEach(id => { let h = calculateCarHp(id); if(h > maxHp) maxHp = h; });
@@ -276,8 +359,8 @@
 
         function nextCar() { playSfx('click'); let idx = player.ownedCars.indexOf(player.currentCarId); idx = (idx + 1) % player.ownedCars.length; player.currentCarId = player.ownedCars[idx]; save(); updateUI(); }
         function prevCar() { playSfx('click'); let idx = player.ownedCars.indexOf(player.currentCarId); idx = (idx - 1 + player.ownedCars.length) % player.ownedCars.length; player.currentCarId = player.ownedCars[idx]; save(); updateUI(); }
-        function buyPart(id, prc) { playSfx('click'); if (player.money >= prc) { player.money -= prc; player.stats.spent += prc; if (!player.carStats[player.currentCarId]) player.carStats[player.currentCarId] = { parts: {}, color: 0 }; if (!player.carStats[player.currentCarId].parts) player.carStats[player.currentCarId].parts = {}; player.carStats[player.currentCarId].parts[id] = (player.carStats[player.currentCarId].parts[id] || 0) + 1; save(); updateUI(); } }
-        function buyCar(id) { playSfx('click'); const c = carsData[id]; if (player.money >= c.price) { player.money -= c.price; player.stats.spent += c.price; player.ownedCars.push(id); if (!player.carStats[id]) player.carStats[id] = { parts: {}, color: 0 }; save(); updateUI(); showScreen('garage'); } }
+        function buyPart(pId, price) { if (typeof playSfx === 'function') playSfx('click'); const p = allParts.find(item => item.id === pId); const carId = player.currentCarId; if (!player.carStats[carId]) player.carStats[carId] = { parts: {}, color: 0 }; if (!player.carStats[carId].parts) player.carStats[carId].parts = {}; const curLvl = player.carStats[carId].parts[pId] || 0; const maxLvl = pId === 'nos_system' ? 1 : 3; if (curLvl >= maxLvl) return; if (p.isGold) { if (player.gold >= price) { player.gold -= price; player.carStats[carId].parts[pId] = curLvl + 1; save(); updateUI(); renderAll(); } else { alert('Нужно больше золота 🧈!'); } } else { if (player.money >= price) { player.money -= price; player.carStats[carId].parts[pId] = curLvl + 1; player.stats.spent += price; save(); updateUI(); renderAll(); } else { alert('Недостаточно денег!'); } } }
+        function buyCar(id) { if (typeof playSfx === 'function') playSfx('click'); const c = carsData[id]; if (player.ownedCars.includes(id)) return; if (c.isGold) { if (player.gold >= c.price) { player.gold -= c.price; player.ownedCars.push(id); if (!player.carStats[id]) player.carStats[id] = { parts: {}, color: 0 }; save(); updateUI(); renderAll(); showScreen('garage'); } else { alert('Нужно больше золота 🧈!'); } } else { if (player.money >= c.price) { player.money -= c.price; player.stats.spent += c.price; player.ownedCars.push(id); if (!player.carStats[id]) player.carStats[id] = { parts: {}, color: 0 }; save(); updateUI(); renderAll(); showScreen('garage'); } else { alert('Недостаточно денег!'); } } }
         function openRace(idx) { playSfx('click'); activeIdx = idx; const enemy = currentEnemies[idx]; const myCar = carsData[player.currentCarId]; document.getElementById('race-modal').style.display = 'flex'; document.getElementById('pre-race-result').innerText = ''; document.getElementById('confirm-race-btn').innerText = "УЧАСТВОВАТЬ!"; document.getElementById('my-race-card').innerHTML = `<div class="img-wrapper"><img id="my-race-img" src="${myCar.img}"></div><h3>Твоя тачка</h3>`; document.getElementById('enemy-race-card').innerHTML = `<div class="img-wrapper"><img id="enemy-race-img" src="${enemy.img}"></div><h3>${enemy.name}</h3>`; const myHue = player.carStats[player.currentCarId]?.color || 0; document.getElementById('my-race-img').style.filter = myHue === 0 ? "" : `hue-rotate(${myHue}deg)`; }
 
         document.getElementById('confirm-race-btn').onclick = function() {
@@ -313,44 +396,94 @@
         };
 
         // 2. Функция покупки
-        function buyFuel(amount, cost) {
-            if (player.money >= cost) {
-                if (player.fuel >= 25) {
-                    alert("Бак уже полон!");
-                    return;
+        function buyFuel(amount, cost) { if (player.money >= cost) { if (player.fuel >= 25) { alert("Бак уже полон!"); return; } player.money -= cost; player.fuel = Math.min(25, player.fuel + amount); if(typeof save === "function") save(); else if(typeof saveGame === "function") saveGame(); updateUI(); document.getElementById('fuel-now').innerText = player.fuel; } else { alert("Недостаточно денег!"); } }
+        function showFuelAd() { if (player.fuel >= 25) { alert("Бак полон!"); return; } if (confirm("Посмотреть рекламу (+5 литров)?")) { player.fuel = Math.min(25, player.fuel + 5); if(typeof save === "function") save(); updateUI(); document.getElementById('fuel-now').innerText = player.fuel; alert("Готово! +5 литров."); } }
+
+    function openBossRace() {
+            const b = bossesDB[player.bossLvl || 0];
+            if (player.gold < b.entryFee) { alert("Нужно больше золота 🧈!"); return; }
+    
+            document.getElementById('race-modal').style.display = 'flex';
+            document.getElementById('pre-race-result').innerText = '';
+    
+            // Добавляем счетчик (Побед: X/10) в карточку босса
+            document.getElementById('enemy-race-card').innerHTML = `
+                <div class="race-card-modal">
+                    <img src="${b.img}" style="width:100%">
+                    <h3>${b.carName}</h3>
+                    <p>${b.hp} л.с.</p>
+                    <p style="color:#f1c40f; font-weight:bold; margin-bottom: 5px;">БОСС</p>
+                    <p style="font-size: 12px; color: #aaa; margin: 0;">ПОБЕД: ${player.bossWins} / 10</p>
+                </div>`;
+
+            document.getElementById('my-race-card').innerHTML = `
+                <div class="race-card-modal">
+                    <img src="${carsData[player.currentCarId].img}" style="width:100%">
+                    <h3>Твоя тачка</h3>
+                    <p>${calculateCarHp(player.currentCarId)} л.с.</p>
+                </div>`;
+
+            window.currentEnemy = { name: b.carName, hp: b.hp, isBoss: true, rewardGold: b.reward, fee: b.entryFee };
+
+            const btn = document.getElementById('confirm-race-btn');
+            btn.style.display = 'block';
+            btn.innerText = 'УЧАСТВОВАТЬ!';
+    
+            const resultDiv = document.getElementById('pre-race-result');
+            resultDiv.innerHTML = `<p style="font-size: 12px; color: #888; margin-top: 10px;">Стоимость заезда: ${b.entryFee} 🧈</p>`;
+
+            btn.onclick = function() { startBossBattleLogic(); };
+        }
+
+        // Новая логика для кнопки внутри окна
+    function processBossRaceLogic() {
+            const b = window.currentEnemy;
+            if (player.fuel < 5) { alert("Нужен бензин ⛽"); return; }
+
+            // Снимаем взнос и бензин
+            player.gold -= bossesDB[player.bossLvl].entryFee;
+            player.fuel -= 5;
+            updateUI();
+
+            // Запускаем ТВОЙ звук и ТВОЮ анимацию (если функция называется по-другому, поправь название)
+            if (window.playSfx) playSfx('engine'); 
+    
+            const resDiv = document.getElementById('pre-race-result');
+            const btn = document.getElementById('confirm-race-btn');
+    
+            btn.style.display = 'none'; // Прячем кнопку как в обычных гонках
+            resDiv.innerText = 'Заезд...';
+    
+            // Имитируем ожидание гонки (как у тебя)
+            setTimeout(() => {
+                const myHp = calculateCarHp(player.currentCarId);
+                const win = Math.random() < (myHp / (myHp + b.hp));
+        
+                if (win) {
+                    player.gold += b.rewardGold;
+                    player.bossWins++;
+                    resDiv.innerHTML = `<span style="color:#2ecc71">ПОБЕДА! +${b.rewardGold} 🧈</span>`;
+                    if (player.bossWins >= 10) {
+                        player.bossWins = 0;
+                        player.bossLvl++;
+                        alert("БОСС ПОВЕРЖЕН!");
+                    }
+                } else {
+                    resDiv.innerHTML = `<span style="color:#e74c3c">ПОРАЖЕНИЕ!</span>`;
                 }
         
-                player.money -= cost;
-                player.fuel = Math.min(25, player.fuel + amount); // Прибавляем, но не выше лимита 25
+                // Показываем кнопку "ЕЩЕ?"
+                btn.style.display = 'block';
+                btn.innerText = 'ЕЩЕ?';
+                btn.onclick = function() { openBossRace(); };
         
-                updateUI(); // Обновляем текст денег и бензина в шапке
-                saveGame(); // Сохраняем прогресс (так как у тебя есть система сохранения)
-        
-                document.getElementById('fuel-now').innerText = player.fuel;
-                console.log(`Куплено ${amount}л. за ${cost}$`);
-            } else {
-                alert("Недостаточно денег для заправки!");
-            }
+                save();
+                updateUI();
+                renderAll();
+            }, 1500); // 1.5 секунды на "анимацию"
         }
 
-        function showFuelAd() {
-        // Имитация просмотра рекламы
-        if (confirm("Посмотреть рекламу для получения 5 литров бензина?")) {
-            // Когда подключишь Яндекс, тут будет вызов: ysdt.adv.showRewardedVideo(...)
-        
-            if (player.fuel >= 25) {
-                alert("Бак уже полон!");
-                return;
-            }
-
-            player.fuel = Math.min(25, player.fuel + 5);
-            updateUI();
-            save();
-        
-            document.getElementById('fuel-now').innerText = player.fuel;
-            alert("Спасибо за просмотр! +5 литров заправлено.");
-        }
-    }
+function startBossBattleLogic() { const b = window.currentEnemy; if (player.fuel < 5) { alert("Нужно 5 ед. бензина! ⛽"); return; } playSfx('engine'); player.gold -= b.fee; player.fuel -= 5; updateUI(); const btn = document.getElementById('confirm-race-btn'); const res = document.getElementById('pre-race-result'); btn.style.display = 'none'; res.innerText = 'Заезд...'; setTimeout(() => { const myHp = calculateCarHp(player.currentCarId); let win = (myHp > b.hp * 1.1) ? (Math.random() < 0.98) : (Math.random() < (myHp / (myHp + b.hp))); if (win) { player.gold += b.rewardGold; player.bossWins++; res.innerHTML = '<span style="color:#2ecc71">ПОБЕДА! +' + b.rewardGold + ' 🧈</span>'; if (player.bossWins >= 10) { player.bossWins = 0; player.bossLvl++; alert("ПОЗДРАВЛЯЕМ! Район захвачен, следующий босс ждет вызова!"); document.getElementById('race-modal').style.display = 'none'; } } else { res.innerHTML = '<span style="color:#e74c3c">ПОРАЖЕНИЕ!</span>'; } btn.style.display = 'block'; btn.innerText = 'ЕЩЕ?'; btn.onclick = function() { openBossRace(); }; save(); updateUI(); renderAll(); }, 1500); }
     </script>
 </body>
 </html>
