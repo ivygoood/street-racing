@@ -204,6 +204,11 @@
             carStats: {}, stats: { races: 0, wins: 0, losses: 0, earned: 500, spent: 0 }
         };
 
+        if (player.gold === undefined) {
+            player.gold = 10; // Выдаем 10 золота тем, у кого его еще нет
+            save(); // Сохраняем, чтобы больше не было undefined
+        }
+
         window.startBossRace = function() { const b = bossesDB[player.bossLvl || 0]; if (!b) return; if (player.gold < b.entryFee) { alert('Нужно больше золота 🧈!'); return; } if (player.fuel < 5) { alert('Нужен бензин ⛽!'); return; } player.gold -= b.entryFee; player.fuel -= 5; const myHp = calculateCarHp(player.currentCarId); const chance = myHp / (myHp + b.hp); if (Math.random() < chance) { player.gold += b.reward; player.bossWins++; if (player.bossWins >= 10) { player.bossWins = 0; player.bossLvl++; alert('БОСС ПОВЕРЖЕН!'); } else { alert('ПОБЕДА!'); } } else { alert('ПОРАЖЕНИЕ!'); } save(); updateUI(); renderAll(); };
 
         function calculateCarHp(carId) {
