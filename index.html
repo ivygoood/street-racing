@@ -66,30 +66,55 @@
         @keyframes shakeAnim { 0% { transform: translate(2px, 1px); } 50% { transform: translate(-2px, -1px); } 100% { transform: translate(1px, -2px); } }
 
         /* Специальные правила для экранов меньше 600 пикселей (смартфоны) */
-        @media (max-width: 600px) {
-            /* Контейнер, где лежат две карточки и VS */
-            #race-modal .modal-content > div[style*="display: flex"] {
-                flex-direction: column !important; /* Тачки теперь одна под другой */
-                gap: 10px !important;
-            }
-
-            /* Уменьшаем сами карточки в модалке */
-            .race-card-modal {
-                width: 100% !important;
+        /* Адаптация под горизонтальный (альбомный) режим */
+        @media (max-height: 500px) {
+            .modal-content {
+                width: 95% !important;
                 padding: 10px !important;
-                margin: 0 !important;
+                border-radius: 10px !important;
             }
 
-            /* Убираем лишние отступы у заголовка */
-            #race-modal h2 {
-                font-size: 18px;
-                margin-bottom: 10px;
+            /* Сжимаем заголовок */
+            .modal-content h2 {
+                font-size: 16px !important;
+                margin: 0 0 5px 0 !important;
             }
 
-            /* Делаем кнопку "Участвовать" пониже, чтобы она не перекрывала всё */
-            #confirm-race-btn {
-                margin-top: 10px;
-                padding: 12px;
+            /* Главный контейнер с карточками: оставляем в ряд, но уменьшаем gap */
+            #race-modal .modal-content > div[style*="display: flex"] {
+                flex-direction: row !important;
+                justify-content: space-around !important;
+                gap: 5px !important;
+            }
+
+            /* Карточки делаем узкими и низкими */
+            .race-card-modal {
+                width: 30% !important;
+                padding: 5px !important;
+            }
+
+            /* Уменьшаем картинки машин, чтобы не раздували высоту */
+            .race-card-modal img {
+                height: 60px !important;
+                width: auto !important;
+            }
+
+            /* Убираем лишние отступы у текста */
+            .race-card-modal h3 { font-size: 14px; margin: 2px 0; }
+            .race-card-modal p { font-size: 12px; margin: 0; }
+
+            /* Кнопки делаем в один ряд, чтобы сэкономить место внизу */
+            .modal-content > button {
+                display: inline-block !important;
+                width: auto !important;
+                padding: 8px 20px !important;
+                font-size: 12px !important;
+                margin: 5px 5px 0 5px !important;
+            }
+
+            /* Надпись VS делаем поменьше */
+            #race-modal .modal-content span {
+                font-size: 20px !important;
             }
         }
 
