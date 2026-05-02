@@ -375,6 +375,19 @@
             if (!carData) return;
             const mult = carData.priceMult || 1;
 
+            // 1. СНАЧАЛА ПОДСВЕТКА (теперь она сработает ПЕРЕД заглушкой)
+            const menuButtons = document.querySelectorAll('.tuning-menu .btn-action');
+            menuButtons.forEach(btn => {
+                const btnText = btn.innerText.toLowerCase().trim();
+                const isActive = (currentTab === 'parts' && btnText === 'детали') || 
+                                 (currentTab === 'color' && btnText === 'цвет') ||
+                                 (currentTab === 'wheels' && btnText === 'диски') ||
+                                 (currentTab === 'other' && btnText === 'другое');
+            
+                btn.style.background = isActive ? '#f1c40f' : '#333';
+                btn.style.color = isActive ? '#000' : '#fff';
+            });
+
             const shopDiv = document.getElementById('shop-items');
             const colorDiv = document.getElementById('color-section'); // Убедись, что такой ID есть у блока с ползунком цвета
             const wheelsDiv = document.getElementById('wheels-section');
@@ -499,21 +512,6 @@
                 }
 
             }
-
-            // 5. ПОДСВЕТКА КНОПОК МЕНЮ
-            // Проходимся по всем кнопкам в меню тюнинга и красим активную
-            const menuButtons = document.querySelectorAll('.tuning-menu .btn-action');
-            menuButtons.forEach(btn => {
-                // Проверка по тексту кнопки (упрощенно)
-                const btnText = btn.innerText.toLowerCase();
-                const isActive = (currentTab === 'parts' && btnText === 'детали') || 
-                                 (currentTab === 'color' && btnText === 'цвет') ||
-                                 (currentTab === 'wheels' && btnText === 'диски') ||
-                                 (currentTab === 'other' && btnText === 'другое');
-        
-                btn.style.background = isActive ? '#f1c40f' : '#333';
-                btn.style.color = isActive ? '#000' : '#fff';
-            });
 
             // --- Тут твой старый код Автосалона и Рейтинга без изменений ---
             const marketDiv = document.getElementById('market-items');
