@@ -131,6 +131,14 @@
                 align-items: center;
             }
 
+            .race-card-modal .img-wrapper img {
+                width: 100% !important;
+                height: 100px !important; /* Фиксируем высоту */
+                object-fit: contain !important; /* Магия: картинка подстроится, не растягиваясь */
+                display: block;
+                margin: 0 auto;
+            }
+
             /* 3. Уменьшаем сами карточки */
             .race-card-modal {
                 flex: 1;
