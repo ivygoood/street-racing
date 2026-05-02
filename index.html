@@ -63,6 +63,49 @@
         .race-card-modal { background: #333; padding: 15px; width: 230px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; }
         .race-shake { animation: shakeAnim 0.1s infinite; }
         @keyframes shakeAnim { 0% { transform: translate(2px, 1px); } 50% { transform: translate(-2px, -1px); } 100% { transform: translate(1px, -2px); } }
+
+        /* Специальные правила для экранов меньше 600 пикселей (смартфоны) */
+        @media (max-width: 600px) {
+            /* 1. Делаем шапку компактнее, чтобы не занимала пол-экрана */
+            .header {
+                flex-wrap: wrap; /* Разрешаем иконкам перепрыгивать на вторую строку */
+                font-size: 12px;
+                padding: 5px;
+                gap: 5px;
+            }
+
+            /* 2. Твои карточки машин и запчастей */
+            .card {
+                width: 140px; /* Делаем их поменьше, чтобы влезало по две в ряд */
+                margin: 5px;
+                padding: 10px;
+            }
+
+            .card img {
+                width: 100% !important;
+                height: auto !important;
+            }
+
+            /* 3. Окно гонки (VS) - самое проблемное на телефонах */
+            #race-modal div[style*="display: flex"] { 
+                flex-direction: column !important; /* Ставим тачки друг под друга, а не в ряд */
+                align-items: center;
+            }
+
+            /* 4. Увеличиваем кнопки, чтобы по ним было легко попадать пальцем */
+            .btn-action {
+                width: 100%;
+                padding: 15px 0;
+                font-size: 16px;
+            }
+
+            /* 5. Масштабируем гараж */
+            .garage-view img {
+                max-width: 100%;
+                height: auto;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -87,7 +130,7 @@
         <div style="display: flex; align-items: center; color: #f1c40f; margin: 0 10px;"> <span style="margin-right: 5px;">🧈</span> <span id="goldText">0</span> </div>
         <div class="lvl">⭐ Ур. <span id="lvlText">1</span> (<span id="xpText">0 / 100</span> XP)</div>
         <div>⚡ <span id="hpText">0</span> л.с.</div>
-        <div>⛽ Бензин: <span id="fuelText">0</span>/25</div>
+        <div>⛽ Бензин: <span id="fuelText">0</span>/<span id="fuelMaxText">25</span></div>
     </div>
 
     <div class="nav">
@@ -103,6 +146,7 @@
             <button class="arrow arrow-left" onclick="prevCar()"><</button>
             <div class="garage-bg"><img src="" id="mainCar" class="car-img"></div>
             <button class="arrow arrow-right" onclick="nextCar()">></button>
+            <button class="btn-action" id="sell-btn" style="background: #c0392b; margin-top: 10px;" onclick="sellCurrentCar()">ПРОДАТЬ АВТО</button>
         </div>
         <h2 id="garageTitle">Твой гараж</h2>
         <div class="stats-dashboard">
@@ -201,10 +245,14 @@
         ];
 
         let player = JSON.parse(localStorage.getItem('sr_player')) || {
-            money: 500, gold: 10, fuel: 25, lvl: 1, xp: 0, bossLvl: 0, bossWins: 0, currentCarId: 'vaz2108', ownedCars: ['vaz2108'],
+            money: 500, gold: 10, fuel: 25, maxFuel: 25, // Добавили базу
+            lvl: 1, xp: 0, bossLvl: 0, bossWins: 0, 
+            currentCarId: 'vaz2108', ownedCars: ['vaz2108'],
             carStats: {}, stats: { races: 0, wins: 0, losses: 0, earned: 500, spent: 0 }
-
         };
+
+        // На случай, если игрок уже играет и у него в localStorage нет maxFuel
+        if (!player.maxFuel) player.maxFuel = 25;
 
         if (player.gold === undefined) {
             player.gold = 10; // Выдаем 10 золота тем, у кого его еще нет
@@ -234,6 +282,8 @@
             document.getElementById('curName').innerText = car.name;
             document.getElementById('lvlText').innerText = player.lvl;
             document.getElementById('xpText').innerText = player.xp + " / " + (player.lvl * 100);
+            document.getElementById('fuelText').innerText = Math.floor(player.fuel);
+            document.getElementById('fuelMaxText').innerText = player.maxFuel || 25;
             
             // Обновляем картинки везде
             const mainImg = document.getElementById('mainCar');
@@ -449,11 +499,16 @@
         document.querySelector('.header div:last-child').onclick = function() {
             document.getElementById('fuel-now').innerText = player.fuel; // Показываем текущий бензин
             document.getElementById('fuel-shop-modal').style.display = 'flex';
+            document.getElementById('fuel-max-display').innerText = player.maxFuel || 25;
+
         };
 
         // 2. Функция покупки
-        function buyFuel(amount, cost) { if (player.money >= cost) { if (player.fuel >= 25) { alert("Бак уже полон!"); return; } player.money -= cost; player.fuel = Math.min(25, player.fuel + amount); if(typeof save === "function") save(); else if(typeof saveGame === "function") saveGame(); updateUI(); document.getElementById('fuel-now').innerText = player.fuel; } else { alert("Недостаточно денег!"); } }
-        function showFuelAd() { if (player.fuel >= 25) { alert("Бак полон!"); return; } if (confirm("Посмотреть рекламу (+5 литров)?")) { player.fuel = Math.min(25, player.fuel + 5); if(typeof save === "function") save(); updateUI(); document.getElementById('fuel-now').innerText = player.fuel; alert("Готово! +5 литров."); } }
+        function updateFuelUI() { document.getElementById('fuel-now').innerText = player.fuel; document.getElementById('fuel-max-display').innerText = player.maxFuel || 25; }
+        function buyFuel(amount, cost) { let max = player.maxFuel || 25; if (player.money >= cost) { if (player.fuel >= max) { alert("Бак уже полон!"); return; } player.money -= cost; player.fuel = Math.min(max, player.fuel + amount); saveAndRefresh(); } else { alert("Недостаточно денег!"); } }
+        function showFuelAd() { let max = player.maxFuel || 25; if (player.fuel >= max) { alert("Бак полон!"); return; } if (confirm("Посмотреть рекламу (+5 литров)?")) { player.fuel = Math.min(max, player.fuel + 5); saveAndRefresh(); alert("Готово! +5 литров."); } }
+        function upgradeTank() { let upgradeCost = 500; if (player.gold >= upgradeCost) { player.gold -= upgradeCost; player.maxFuel = (player.maxFuel || 25) + 5; saveAndRefresh(); alert("Емкость бака увеличена до " + player.maxFuel + "л!"); } else { alert("Недостаточно золота!"); } }
+        function saveAndRefresh() { if(typeof save === "function") save(); else if(typeof saveGame === "function") saveGame(); if(typeof updateUI === "function") updateUI(); updateFuelUI(); }
 
     function openBossRace() {
             const b = bossesDB[player.bossLvl || 0];
@@ -540,6 +595,11 @@
         }
 
 function startBossBattleLogic() { const b = window.currentEnemy; if (player.fuel < 5) { alert("Нужно 5 ед. бензина! ⛽"); return; } playSfx('engine'); player.gold -= b.fee; player.fuel -= 5; updateUI(); const btn = document.getElementById('confirm-race-btn'); const res = document.getElementById('pre-race-result'); btn.style.display = 'none'; res.innerText = 'Заезд...'; setTimeout(() => { const myHp = calculateCarHp(player.currentCarId); let win = (myHp > b.hp * 1.1) ? (Math.random() < 0.98) : (Math.random() < (myHp / (myHp + b.hp))); if (win) { player.gold += b.rewardGold; player.bossWins++; res.innerHTML = '<span style="color:#2ecc71">ПОБЕДА! +' + b.rewardGold + ' 🧈</span>'; if (player.bossWins >= 10) { player.bossWins = 0; player.bossLvl++; alert("ПОЗДРАВЛЯЕМ! Район захвачен, следующий босс ждет вызова!"); document.getElementById('race-modal').style.display = 'none'; } } else { res.innerHTML = '<span style="color:#e74c3c">ПОРАЖЕНИЕ!</span>'; } btn.style.display = 'block'; btn.innerText = 'ЕЩЕ?'; btn.onclick = function() { openBossRace(); }; save(); updateUI(); renderAll(); }, 1500); }
+function sellCurrentCar() { const modal = document.getElementById('sell-modal'); const content = document.getElementById('sell-content'); const error = document.getElementById('sell-error'); const success = document.getElementById('sell-success'); modal.style.display = 'flex'; content.style.display = 'none'; error.style.display = 'none'; success.style.display = 'none'; if (player.ownedCars.length <= 1) { error.style.display = 'block'; } else { content.style.display = 'block'; const c = carsData[player.currentCarId]; const price = Math.floor(c.price * 0.7); document.getElementById('sell-text').innerText = "Продать " + c.name + "?"; document.getElementById('sell-price-display').innerText = price + (c.isGold ? " 🧈" : " $"); } }
+function confirmSale() { const id = player.currentCarId; const c = carsData[id]; const price = Math.floor(c.price * 0.7); if (c.isGold) player.gold += price; else player.money += price; player.ownedCars = player.ownedCars.filter(car => car !== id); delete player.carStats[id]; player.currentCarId = player.ownedCars[0]; save(); updateUI(); renderAll(); document.getElementById('sell-content').style.display = 'none'; document.getElementById('sell-success').style.display = 'block'; }
+function closeSellModal() { document.getElementById('sell-modal').style.display = 'none'; document.getElementById('sell-content').style.display = 'block'; document.getElementById('sell-success').style.display = 'none'; showScreen('garage'); }  
+
+
     </script>
 </body>
 </html>
@@ -552,15 +612,47 @@ function startBossBattleLogic() { const b = window.currentEnemy; if (player.fuel
         <div style="background: #111; padding: 15px; border-radius: 10px; border: 1px solid #333; margin-bottom: 20px;">
             <span style="color: #eee;">Бензин в баке:</span> 
             <span id="fuel-now" style="color: #f1c40f; font-weight: bold; font-size: 20px;">0</span> 
-            <span style="color: #555;">/ 25</span>
+            <span style="color: #555;">/ <span id="fuel-max-display">25</span></span>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 12px;">
             <button class="btn-action" onclick="buyFuel(5, 500)">+5 ЛИТРОВ — 500$</button>
             <button class="btn-action" onclick="buyFuel(15, 1200)">+15 ЛИТРОВ — 1200$</button>
             <button id="ad-fuel-btn" class="btn-action" onclick="showFuelAd()" style="background: #3498db;">+5 ЛИТРОВ (ЗА РЕКЛАМУ)</button>
+            
+            <!-- Новая кнопка -->
+            <button class="btn-action" onclick="upgradeTank()" style="background: #f1c40f; color: #000; font-weight: bold; margin-top: 10px;">УВЕЛИЧИТЬ БАК (+5л) — 500 ЗОЛОТА</button>
         </div>
 
         <button onclick="document.getElementById('fuel-shop-modal').style.display='none'" style="background:none; border:none; color:#555; cursor:pointer; margin-top:20px; text-decoration: underline; font-size: 12px; text-transform: uppercase;">Вернуться в гараж</button>
     </div>
 </div>
+
+<div id="sell-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 5000; justify-content: center; align-items: center;">
+    <div style="background: #1a1a1a; padding: 25px; border: 2px dashed #c0392b; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 0 20px rgba(192, 57, 43, 0.4);">
+        <h2 style="color: #c0392b; text-transform: uppercase; margin-bottom: 15px;">Продажа Авто</h2>
+        
+        <!-- 1. Состояние: Вопрос перед продажей -->
+        <div id="sell-content">
+            <p id="sell-text" style="color: #eee;">Продать машину?</p>
+            <div id="sell-price-display" style="font-size: 24px; color: #f1c40f; font-weight: bold; margin: 20px 0;">0 $</div>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button class="btn-action" style="background: #c0392b;" onclick="confirmSale()">ПРОДАТЬ</button>
+                <button class="btn-action" style="background: #555;" onclick="document.getElementById('sell-modal').style.display='none'">ОТМЕНА</button>
+            </div>
+        </div>
+
+        <!-- 2. Состояние: Ошибка (последняя машина) -->
+        <div id="sell-error" style="display: none;">
+            <p style="color: #eee; margin: 20px 0;">Нельзя продать последнюю машину! <br>Ты же не хочешь ходить пешком?</p>
+            <button class="btn-action" style="background: #555;" onclick="document.getElementById('sell-modal').style.display='none'">ПОНЯТНО</button>
+        </div>
+
+        <!-- 3. Состояние: Успех -->
+        <div id="sell-success" style="display: none;">
+            <p style="color: #2ecc71; font-size: 18px; font-weight: bold; margin: 20px 0;">АВТОМОБИЛЬ ПРОДАН!</p>
+            <button class="btn-action" onclick="closeSellModal()">ОТЛИЧНО</button>
+        </div>
+    </div>
+</div>
+
