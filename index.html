@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -60,49 +60,36 @@
 
         #race-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center; }
         .modal-content { background: #222; padding: 30px; border: 2px solid #f00; border-radius: 15px; width: 600px; }
+        <div onclick="closeRace()" style="position: absolute; top: 10px; right: 15px; color: #555; cursor: pointer; font-size: 24px; font-weight: bold;">&times;</div>
         .race-card-modal { background: #333; padding: 15px; width: 230px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; }
         .race-shake { animation: shakeAnim 0.1s infinite; }
         @keyframes shakeAnim { 0% { transform: translate(2px, 1px); } 50% { transform: translate(-2px, -1px); } 100% { transform: translate(1px, -2px); } }
 
         /* Специальные правила для экранов меньше 600 пикселей (смартфоны) */
         @media (max-width: 600px) {
-            /* 1. Делаем шапку компактнее, чтобы не занимала пол-экрана */
-            .header {
-                flex-wrap: wrap; /* Разрешаем иконкам перепрыгивать на вторую строку */
-                font-size: 12px;
-                padding: 5px;
-                gap: 5px;
+            /* Контейнер, где лежат две карточки и VS */
+            #race-modal .modal-content > div[style*="display: flex"] {
+                flex-direction: column !important; /* Тачки теперь одна под другой */
+                gap: 10px !important;
             }
 
-            /* 2. Твои карточки машин и запчастей */
-            .card {
-                width: 140px; /* Делаем их поменьше, чтобы влезало по две в ряд */
-                margin: 5px;
-                padding: 10px;
-            }
-
-            .card img {
+            /* Уменьшаем сами карточки в модалке */
+            .race-card-modal {
                 width: 100% !important;
-                height: auto !important;
+                padding: 10px !important;
+                margin: 0 !important;
             }
 
-            /* 3. Окно гонки (VS) - самое проблемное на телефонах */
-            #race-modal div[style*="display: flex"] { 
-                flex-direction: column !important; /* Ставим тачки друг под друга, а не в ряд */
-                align-items: center;
+            /* Убираем лишние отступы у заголовка */
+            #race-modal h2 {
+                font-size: 18px;
+                margin-bottom: 10px;
             }
 
-            /* 4. Увеличиваем кнопки, чтобы по ним было легко попадать пальцем */
-            .btn-action {
-                width: 100%;
-                padding: 15px 0;
-                font-size: 16px;
-            }
-
-            /* 5. Масштабируем гараж */
-            .garage-view img {
-                max-width: 100%;
-                height: auto;
+            /* Делаем кнопку "Участвовать" пониже, чтобы она не перекрывала всё */
+            #confirm-race-btn {
+                margin-top: 10px;
+                padding: 12px;
             }
         }
 
@@ -655,4 +642,3 @@ function closeSellModal() { document.getElementById('sell-modal').style.display 
         </div>
     </div>
 </div>
-
