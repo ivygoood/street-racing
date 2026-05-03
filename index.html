@@ -131,7 +131,7 @@
 
 
     <div class="header">
-        <div>🚗 <span id="curName">...</span></div>
+        <div> <span id="curName">...</span></div>
         <div class="money">💲 <span id="moneyText">0</span> $</div>
         <div style="display: flex; align-items: center; color: #f1c40f; margin: 0 10px;"> <span style="margin-right: 5px;">💰</span> <span id="goldText">0</span> </div>
         <div class="lvl">⭐ Ур. <span id="lvlText">1</span> (<span id="xpText">0 / 100</span> XP)</div>
@@ -188,14 +188,19 @@
             <div id="color-section" style="display: none; text-align: center;">
                 <div class="color-picker">
                     <h3>Внешний вид (Цвет кузова)</h3>
-                    <div class="color-list" id="color-list-body" style="display: flex; justify-content: center; gap: 10px; margin: 15px 0;">
-                        <div class="color-btn" style="background:#fff" onclick="changeColor(0)" title="Заводской"></div>
-                        <div class="color-btn" style="background:#f00" onclick="changeColor(350)" title="Красный"></div>
-                        <div class="color-btn" style="background:#0f0" onclick="changeColor(90)" title="Зеленый"></div>
-                        <div class="color-btn" style="background:#00f" onclick="changeColor(210)" title="Синий"></div>
-                        <div class="color-btn" style="background:#f1c40f" onclick="changeColor(45)" title="Золотой"></div>
-                        <div class="color-btn" style="background:#a29bfe" onclick="changeColor(280)" title="Фиолетовый"></div>
-                    </div>
+                        <div class="color-picker" style="max-width: 450px; margin: 0 auto; padding: 10px;">
+                            <h3 style="margin-bottom: 15px; color: #fff; letter-spacing: 1px;">ПАЛИТРА</h3>
+    
+                            <!-- Радужный градиент на фоне ползунка -->
+                            <input type="range" id="hue-range" min="0" max="360" value="0" 
+                                   oninput="changeColor(this.value)"
+                                   style="width: 100%; height: 12px; border-radius: 10px; cursor: pointer; outline: none; appearance: none;
+                                          background: linear-gradient(to right, #ff0000, #ffea00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+                                          border: 1px solid #444;">
+    
+                            <div id="color-val-text" style="color: #f1c40f; font-size: 13px; margin-top: 10px; font-weight: bold; text-transform: uppercase;">Заводской вид</div>
+                        </div>
+
                     <div class="tuning-preview" style="background: #111; padding: 20px; border-radius: 15px; display: inline-block; margin-top: 10px;">
                         <img src="" id="tuningCarImg" class="car-img" style="width: 400px; max-width: 100%;">
                     </div>
@@ -214,10 +219,10 @@
                 <img id="wheels-car-img" src="" class="car-img" style="width: 500px; display: block; position: relative; z-index: 1;">
         
                 <!-- Переднее колесо -->
-                <div id="wheel-front" style="position: absolute; border-radius: 50%; z-index: 2; border: 1px solid #000;"></div>
+                <div id="wheel-front" style="position: absolute; border-radius: 50%; z-index: 2; border: 'none';"></div>
         
                 <!-- Заднее колесо -->
-                <div id="wheel-back" style="position: absolute; border-radius: 50%; z-index: 2; border: 1px solid #000;"></div>
+                <div id="wheel-back" style="position: absolute; border-radius: 50%; z-index: 2; border: 'none';"></div>
             </div>
 
             <div style="margin-top: 20px;">
@@ -239,10 +244,11 @@
     <script>
         const sounds = { click: new Audio('sounds/click.mp3'), engine: new Audio('sounds/engine.mp3') };
         function playSfx(type) { const sfx = sounds[type]; if (sfx) { sfx.currentTime = 0; sfx.play().catch(e => {}); } }
+        const carFilter = (hue) => hue == 0 ? "" : `saturate(0.4) hue-rotate(${hue}deg) saturate(2.2) brightness(0.7) contrast(1.3)`;
 
        
         const carsData = {
-        'vaz2108':    { name: 'ВАЗ 2109', hp: 70, price: 1000, minLvl: 1, img: 'images/car.png', width: '450px', bottom: '30px', priceMult: 1.0, wPos: { fL: 63, bL: 308, t: 122, s: 52 } },
+        'vaz2108':    { name: 'ВАЗ 2109', hp: 70, price: 1000, minLvl: 1, img: 'images/car.png', width: '450px', bottom: '30px', priceMult: 1.0, wPos: { fL: 60.3, bL: 23.2, t: 47.2, s: 15.5 } },
         'oka':        { name: 'ЗАЗ 965', hp: 35, price: 500, minLvl: 1, img: 'images/zaz.png', width: '400px', bottom: '45px', priceMult: 0.7, wPos: { fL: 45, bL: 245, t: 115, s: 45 } },
         'vaz2104':    { name: 'ВАЗ 2104', hp: 71, price: 900, minLvl: 1, img: 'images/vaz2104.png', width: '500px', bottom: '35px', priceMult: 1.05, wPos: { fL: 75, bL: 325, t: 122, s: 52 } },
         'vaz2114':    { name: 'ВАЗ 2114', hp: 77, price: 1100, minLvl: 3, img: 'images/vaz2114.png', width: '450px', bottom: '30px', priceMult: 1.05, wPos: { fL: 70, bL: 330, t: 122, s: 52 } },
@@ -270,15 +276,16 @@
         ];
 
         const allWheels = [
-            { id: 'stock', name: 'Сток', price: 0, color: '#999', style: 'radial-gradient(circle, #555, #222)' },
-            { id: 'vossen', name: 'Vossen', price: 1500, color: '#eee', style: 'conic-gradient(#eee, #999, #eee, #999, #eee)' },
-            { id: 'bbs', name: 'BBS Gold', price: 50, isGold: true, color: '#f1c40f', style: 'repeating-conic-gradient(#f1c40f 0% 10%, #d4af37 10% 20%)' }
+            { id: 'stock', price: 0 }, // Заводские
+            { id: '1', price: 1500 },  // Твоя скачанная картинка
+            { id: '2', price: 2000 },
+            { id: '3', price: 2500 },
+            { id: '4', price: 500 }
         ];
 
 
-
         const bots = [
-            { name: "Turbo_Gleb", hp: 550, lvl: 30 },
+            { name: "ivygood", hp: 2350, lvl: 67 },
             { name: "Sanya_Racer", hp: 220, lvl: 15 },
             { name: "Dimon777", hp: 160, lvl: 8 },
             { name: "Night_Wolf", hp: 130, lvl: 5 },
@@ -341,11 +348,41 @@
 
             
             [mainImg, tuningImg].forEach(img => {
+                if (!img) return;
+
+                // 1. Прячем картинку мгновенно для бесшовного перехода
+                img.style.opacity = '0';
+
+                // 2. Подготавливаем фильтр
+                const shadow = "drop-shadow(0 15px 10px rgba(0,0,0,0.6))";
+                const newFilter = hue === 0 ? shadow : `saturate(0.5) hue-rotate(${hue}deg) saturate(2) contrast(1.1) ${shadow}`;
+
+                // 3. Применяем настройки к самой машине
+                img.style.filter = newFilter;
                 img.src = car.img; 
                 img.style.width = car.width; 
                 img.style.bottom = car.bottom;
-                img.style.filter = hue === 0 ? "drop-shadow(0 15px 10px rgba(0,0,0,0.6))" : `hue-rotate(${hue}deg) drop-shadow(0 15px 10px rgba(0,0,0,0.6))`;
+
+                // --- ДОБАВЛЕННЫЙ БЛОК ДЛЯ ДИСКОВ ---
+                // Находим контейнер, в котором лежит картинка (например, garage-bg)
+                const container = img.parentElement;
+                if (container) {
+                    // Убеждаемся, что контейнер позволяет позиционировать диски
+                    if (container.style.position !== 'absolute') {
+                        container.style.position = 'relative';
+                    }
+                    // Вызываем твою функцию установки дисков
+                    applyWheels(container, car.id || player.currentCarId);
+                }
+                // ----------------------------------
+
+                // 4. Проявляем всё вместе
+                setTimeout(() => {
+                    img.style.opacity = '1';
+                }, 30);
             });
+
+
 
             // Подсветка активной кнопки цвета
             document.querySelectorAll('.color-btn').forEach(btn => {
@@ -361,11 +398,26 @@
             renderAll();
         }
 
+        
         function changeColor(hue) {
-            playSfx('click');
-            if (!player.carStats[player.currentCarId]) player.carStats[player.currentCarId] = { parts: {}, color: 0 };
-            player.carStats[player.currentCarId].color = hue;
-            save(); updateUI();
+            hue = parseInt(hue);
+            const carId = player.currentCarId;
+            if (!player.carStats[carId]) player.carStats[carId] = { parts: {}, color: 0 };
+            player.carStats[carId].color = hue;
+
+            const imgT = document.getElementById('tuningCarImg');
+            const imgM = document.getElementById('mainCar');
+    
+            // Чистый фильтр без лишнего затемнения
+            const f = hue == 0 ? "" : `saturate(0.5) hue-rotate(${hue}deg) saturate(2) contrast(1.1)`;
+    
+            if (imgT) imgT.style.filter = f;
+            if (imgM) imgM.style.filter = f;
+
+            if (document.getElementById('color-val-text')) {
+                document.getElementById('color-val-text').innerText = hue == 0 ? "Оригинал" : "Тюнинг: " + hue + "°";
+            }
+            save(); 
         }
 
         function renderAll() {
@@ -374,7 +426,7 @@
             if (!carData) return;
             const mult = carData.priceMult || 1;
 
-            // 1. СНАЧАЛА ПОДСВЕТКА (теперь она сработает ПЕРЕД заглушкой)
+                        // 1. ПОДСВЕТКА КНОПОК МЕНЮ
             const menuButtons = document.querySelectorAll('.tuning-menu .btn-action');
             menuButtons.forEach(btn => {
                 const btnText = btn.innerText.toLowerCase().trim();
@@ -382,25 +434,37 @@
                                  (currentTab === 'color' && btnText === 'цвет') ||
                                  (currentTab === 'wheels' && btnText === 'диски') ||
                                  (currentTab === 'other' && btnText === 'другое');
-            
+    
                 btn.style.background = isActive ? '#f1c40f' : '#333';
                 btn.style.color = isActive ? '#000' : '#fff';
             });
 
+            // Находим все блоки
             const shopDiv = document.getElementById('shop-items');
-            const colorDiv = document.getElementById('color-section'); // Убедись, что такой ID есть у блока с ползунком цвета
+            const colorDiv = document.getElementById('color-section');
             const wheelsDiv = document.getElementById('wheels-section');
+            const shopScreen = document.getElementById('screen-shop'); // ДОБАВИЛИ ЭТУ СТРОКУ
 
-            // 1. ПРИНУДИТЕЛЬНО СКРЫВАЕМ ВСЕ ТРИ БЛОКА (чтобы они не накладывались)
+            // 2. ЖЕСТКОЕ СКРЫТИЕ ПРИ СМЕНЕ ЭКРАНА
+            if (shopScreen && !shopScreen.classList.contains('active')) {
+                if (wheelsDiv) wheelsDiv.style.display = 'none';
+                if (colorDiv) colorDiv.style.display = 'none';
+                if (shopDiv) shopDiv.style.display = 'none';
+                return; // Выходим, если мы не в тюнинге
+            }
+
+            // 3. УПРАВЛЕНИЕ ВКЛАДКАМИ (Сначала всё прячем)
             if (shopDiv) shopDiv.style.display = 'none';
             if (colorDiv) colorDiv.style.display = 'none';
             if (wheelsDiv) wheelsDiv.style.display = 'none';
 
-            // 2. ВКЛЮЧАЕМ ТОЛЬКО ТОТ БЛОК, КОТОРЫЙ НУЖЕН СЕЙЧАС
-            if (currentTab === 'parts' || currentTab === 'other' || currentTab === 'wheels') {
-                if (shopDiv) shopDiv.style.display = 'flex'; // Диски теперь будут рисоваться в общем поле shopDiv
+            // 4. ВКЛЮЧАЕМ НУЖНОЕ
+            if (currentTab === 'parts' || currentTab === 'other') {
+                if (shopDiv) shopDiv.style.display = 'flex';
             } else if (currentTab === 'color') {
                 if (colorDiv) colorDiv.style.display = 'block';
+            } else if (currentTab === 'wheels') {
+                if (wheelsDiv) wheelsDiv.style.display = 'block'; // ВКЛЮЧАЕМ ИМЕННО БЛОК С МАШИНОЙ
             }
 
             if (shopDiv) {
@@ -437,62 +501,76 @@
                     shopDiv.innerHTML += `<div style="width: 100%; height: 20px;"></div>`; 
                     goldParts.forEach(p => shopDiv.innerHTML += createCard(p));
                 } 
-        
-                // 3. ОТРИСОВКА ВКЛАДКИ "ДИСКИ"
-                else if (currentTab === 'wheels') {
-                    return shopDiv.innerHTML = '<h2 style="color:#555; width:100%; text-align:center; margin-top:50px;">В РАЗРАБОТКЕ</h2>';
-                    const wheelsDiv = document.getElementById('wheels-section');
-                    const shopScreen = document.getElementById('screen-shop');
+                
+                else if (currentTab === 'wheels') { if(wheelsDiv) wheelsDiv.style.display = 'none'; shopDiv.style.display = 'flex'; shopDiv.innerHTML = '<h2 style="color:#555; width:100%; text-align:center; margin-top:50px;">В РАЗРАБОТКЕ</h2>'; }
 
-                    // Проверяем: если мы НЕ на экране магазина/тюнинга, принудительно скрываем диски и выходим
-                    if (!shopScreen.classList.contains('active')) {
-                        if (wheelsDiv) wheelsDiv.style.display = 'none';
-                    } 
-                    else if (wheelsDiv) {
+                //раздел дисков
+                else if (currentTab === 'wheels') {
+                    if (shopDiv) shopDiv.style.display = 'none'; 
+                    const wheelsDiv = document.getElementById('wheels-section');
+                
+                    if (wheelsDiv) {
                         wheelsDiv.style.display = 'block';
                         const carId = player.currentCarId;
                         const carData = carsData[carId];
                         if (!carData) return;
 
-                        document.getElementById('wheels-car-img').src = carData.img;
+                        // 1. Ставим машину и применяем текущий цвет (чтобы не была просто желтой)
+                        const carImg = document.getElementById('wheels-car-img');
+                        if (carImg) {
+                            carImg.src = carData.img;
+                            const hue = player.carStats[carId]?.color || 0;
+                            // Тот самый фильтр, который мы подобрали
+                            carImg.style.filter = hue === 0 ? "" : `saturate(0.5) hue-rotate(${hue}deg) saturate(2) contrast(1.1)`;
+                        }
 
-                        // --- АДАПТАЦИЯ КОЛЕС ПОД МОДЕЛЬ АВТО ---
-                        // Если wPos нет в базе, используем стандартные от девятки, чтобы не ломалось
-                        const wPos = carData.wPos || { fL: 63, bL: 308, t: 122, s: 52 };
+                        // 2. Позиционируем диски в ПРОЦЕНТАХ
+                        const wPos = carData.wPos || { fL: 68.2, bL: 18.3, t: 62.1, s: 13.5 };
                         const f = document.getElementById('wheel-front');
                         const b = document.getElementById('wheel-back');
         
+                        // Текущий выбранный диск (временный или уже купленный)
+                        const activeId = window.tempWheelId || player.carStats[carId]?.wheels || 'stock';
+        
                         if (f && b) {
-                            f.style.left = wPos.fL + 'px';
-                            f.style.top = wPos.t + 'px';
-                            f.style.width = f.style.height = wPos.s + 'px';
-            
-                            b.style.left = wPos.bL + 'px';
-                            b.style.top = wPos.t + 'px';
-                            b.style.width = b.style.height = wPos.s + 'px';
+                            // Если диск не 'stock', показываем картинку, иначе прячем
+                            if (activeId !== 'stock') {
+                                f.style.display = b.style.display = 'block';
+                                f.style.backgroundImage = b.style.backgroundImage = `url('images/${activeId}.png')`;
+                                f.style.backgroundSize = b.style.backgroundSize = 'contain';
+                                f.style.backgroundRepeat = b.style.backgroundRepeat = 'no-repeat';
+                            } else {
+                                f.style.display = b.style.display = 'none';
+                            }
+
+                            f.style.left = wPos.fL + '%';
+                            b.style.left = wPos.bL + '%';
+                            f.style.top = b.style.top = wPos.t + '%';
+                            f.style.width = f.style.height = b.style.width = b.style.height = wPos.s + '%';
                         }
 
-                        // Отрисовка кнопок выбора дисков
+                        // 3. Список дисков в меню
                         const list = document.getElementById('wheels-list');
                         list.innerHTML = '';
                         allWheels.forEach(w => {
-                            const isSel = (window.tempWheelId || player.carStats[carId]?.wheels || 'stock') === w.id;
-                            list.innerHTML += `<div onclick="previewWheels('${w.id}')" style="cursor:pointer; width:50px; height:50px; border-radius:8px; background:${w.style}; border:3px solid ${isSel ? '#f1c40f' : '#333'};"></div>`;
+                            const isSel = activeId === w.id;
+                            // Если это сток - рисуем пустой квадрат, если нет - картинку
+                            const bg = w.id === 'stock' ? '#222' : `url('images/${w.id}.png') center/cover`;
+                            list.innerHTML += `<div onclick="previewWheels('${w.id}')" 
+                                style="cursor:pointer; width:60px; height:60px; border-radius:8px; 
+                                background:${bg}; border:3px solid ${isSel ? '#f1c40f' : '#444'};"></div>`;
                         });
 
-                        // Применяем выбранный стиль диска
-                        const activeId = window.tempWheelId || player.carStats[carId]?.wheels || 'stock';
+                        // 4. Кнопка установки
                         const activeW = allWheels.find(w => w.id === activeId);
-                        if (f && b && activeW) f.style.background = b.style.background = activeW.style;
-
-                        // Кнопка установки
                         const btn = document.getElementById('buy-wheels-btn');
-                        if (btn) {
+                        if (btn && activeW) {
                             const isOwned = player.carStats[carId]?.wheels === activeId;
-                            btn.innerText = isOwned ? "УСТАНОВЛЕНО" : `КУПИТЬ ЗА ${activeW.price} ${activeW.isGold ? '💰' : '$'}`;
+                            btn.innerText = isOwned ? "УСТАНОВЛЕНО" : `УСТАНОВИТЬ ЗА ${activeW.price}$`;
                             btn.onclick = () => confirmWheels(activeId);
                         }
                     }
+                
                 }
 
 
@@ -643,7 +721,34 @@
 
 
         function closeRace() { sounds.engine.pause(); document.getElementById('race-modal').style.display = 'none'; }
-        function showScreen(id) { if (typeof playSfx === 'function') playSfx('click'); document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active')); const wheelsSection = document.getElementById('wheels-section'); const colorSection = document.getElementById('color-section'); if (wheelsSection) wheelsSection.style.display = 'none'; if (colorSection) colorSection.style.display = 'none'; const targetScreen = document.getElementById('screen-' + id); const targetNav = document.getElementById('nav-' + id); if (targetScreen) targetScreen.classList.add('active'); if (targetNav) targetNav.classList.add('active'); if (id === 'shop') { currentTab = 'parts'; } renderAll(); }
+        function showScreen(id) {
+            if (typeof playSfx === 'function') playSfx('click');
+    
+            // 1. Прячем все главные экраны
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+
+            // 2. ЖЕСТКО прячем блоки тюнинга (чтобы не лезли в автосалон)
+            const wheelsSection = document.getElementById('wheels-section');
+            const colorSection = document.getElementById('color-section');
+            if (wheelsSection) wheelsSection.style.display = 'none';
+            if (colorSection) colorSection.style.display = 'none';
+
+            // 3. Включаем нужный экран
+            const targetScreen = document.getElementById('screen-' + id);
+            const targetNav = document.getElementById('nav-' + id);
+            if (targetScreen) targetScreen.classList.add('active');
+            if (targetNav) targetNav.classList.add('active');
+
+            // 4. Если зашли в тюнинг, по умолчанию открываем детали
+            if (id === 'shop') { 
+                window.currentTab = 'parts'; 
+            } else {
+                window.currentTab = ''; // Очищаем вкладку, если мы не в тюнинге
+            }
+
+            renderAll();
+        }        
         function getMaxHp(carId) { const c = carsData[carId]; let total = c.hp; Object.keys(allParts).forEach(pId => { const p = allParts[pId]; const maxLvl = p.id === 'nos_system' ? 1 : 3; total += p.baseHp * maxLvl; }); return total; }
         function generateEnemies() { const myHp = calculateCarHp(player.currentCarId); currentEnemies = []; const keys = Object.keys(carsData); for (let i = 0; i < 3; i++) { const randomKey = keys[Math.floor(Math.random() * keys.length)]; const mod = carsData[randomKey]; const carMaxHp = getMaxHp(randomKey); let targetHp = Math.floor(myHp * (0.85 + Math.random() * 0.3)); if (targetHp > carMaxHp) { targetHp = carMaxHp; } currentEnemies.push({ name: mod.name, img: mod.img, hp: targetHp, prize: Math.floor(targetHp / 1.5), xp: 5 }); } renderAll(); }        
         function save() { localStorage.setItem('sr_player', JSON.stringify(player)); }
@@ -720,41 +825,15 @@ function startBossBattleLogic() { const b = window.currentEnemy; if (player.fuel
 function sellCurrentCar() { const modal = document.getElementById('sell-modal'); const content = document.getElementById('sell-content'); const error = document.getElementById('sell-error'); const success = document.getElementById('sell-success'); modal.style.display = 'flex'; content.style.display = 'none'; error.style.display = 'none'; success.style.display = 'none'; if (player.ownedCars.length <= 1) { error.style.display = 'block'; } else { content.style.display = 'block'; const c = carsData[player.currentCarId]; const price = Math.floor(c.price * 0.7); document.getElementById('sell-text').innerText = "Продать " + c.name + "?"; document.getElementById('sell-price-display').innerText = price + (c.isGold ? " 💰" : " $"); } }
 function confirmSale() { const id = player.currentCarId; const c = carsData[id]; const price = Math.floor(c.price * 0.7); if (c.isGold) player.gold += price; else player.money += price; player.ownedCars = player.ownedCars.filter(car => car !== id); delete player.carStats[id]; player.currentCarId = player.ownedCars[0]; save(); updateUI(); renderAll(); document.getElementById('sell-content').style.display = 'none'; document.getElementById('sell-success').style.display = 'block'; }
 function closeSellModal() { document.getElementById('sell-modal').style.display = 'none'; document.getElementById('sell-content').style.display = 'block'; document.getElementById('sell-success').style.display = 'none'; showScreen('garage'); }  
-function previewWheels(id) { window.tempWheelId = id; renderAll(); }
+
+function previewWheels(wheelId){window.tempWheelId=wheelId;if(typeof playSfx==='function')playSfx('click');const f=document.getElementById('wheel-front'),b=document.getElementById('wheel-back');if(f&&b){if(wheelId==='stock'){f.style.display=b.style.display='none';}else{f.style.display=b.style.display='block';const url="url('images/"+wheelId+".png')",size=f.offsetWidth+"px";f.style.backgroundImage=b.style.backgroundImage=url;f.style.height=b.style.height=size;f.style.borderRadius=b.style.borderRadius='50%';f.style.backgroundSize=b.style.backgroundSize='90%';f.style.backgroundRepeat=b.style.backgroundRepeat='no-repeat';f.style.backgroundPosition=b.style.backgroundPosition='center';f.style.backgroundColor=b.style.backgroundColor='#111';f.style.border=b.style.border='none';f.style.boxShadow=b.style.boxShadow='0 0 10px rgba(0,0,0,0.8)';}}renderAll();}
+
+
 function confirmWheels(id) { const w = allWheels.find(i => i.id === id); if (w.isGold ? player.gold < w.price : player.money < w.price) return alert("Недостаточно средств!"); w.isGold ? player.gold -= w.price : player.money -= w.price; if(!player.carStats[player.currentCarId]) player.carStats[player.currentCarId] = {parts:{}}; player.carStats[player.currentCarId].wheels = id; save(); updateUI(); renderAll(); }
 
-    function applyWheels(container, carId) {
-        const carData = carsData[carId];
-        const stats = player.carStats[carId];
-        if (!carData || !stats || !stats.wheels || stats.wheels === 'stock') {
-            container.querySelectorAll('.wheel').forEach(w => w.style.display = 'none');
-            return;
-        }
-
-        const wPos = carData.wPos;
-        const wheelStyle = allWheels.find(w => w.id === stats.wheels)?.style;
-
-        // Ищем или создаем два колеса внутри контейнера
-        ['f', 'b'].forEach(type => {
-            let w = container.querySelector('.wheel-' + type);
-            if (!w) {
-                w = document.createElement('div');
-                w.className = 'wheel wheel-' + type;
-                w.style.position = 'absolute';
-                w.style.borderRadius = '50%';
-                w.style.zIndex = '2';
-                container.appendChild(w);
-            }
-        
-            w.style.display = 'block';
-            w.style.background = wheelStyle;
-            w.style.left = (type === 'f' ? wPos.fL : wPos.bL) + '%';
-            w.style.top = wPos.t + '%';
-            w.style.width = w.style.height = wPos.s + '%';
-        });
-    }
-
-    function activatePromo() {
+function applyWheels(container, carId) { const carData = carsData[carId]; const stats = player.carStats[carId]; container.querySelectorAll('.wheel').forEach(w => w.remove()); if (!carData || !stats || !stats.wheels || stats.wheels === 'stock') return; const wPos = carData.wPos || { fL: 64, bL: 18, t: 65, s: 15 }; const wheelId = stats.wheels; ['f', 'b'].forEach(type => { const w = document.createElement('div'); w.className = 'wheel wheel-' + type; w.style.position = 'absolute'; w.style.zIndex = '100'; w.style.backgroundImage = 'url(images/' + wheelId + '.png)'; w.style.backgroundSize = 'contain'; w.style.backgroundRepeat = 'no-repeat'; w.style.backgroundPosition = 'center'; w.style.left = (type === 'f' ? wPos.fL : wPos.bL) + '%'; w.style.top = wPos.t + '%'; w.style.width = w.style.height = wPos.s + '%'; container.appendChild(w); }); } 
+ 
+        function activatePromo() {
             const input = document.getElementById('promo-input');
             const msg = document.getElementById('promo-msg');
             const code = input.value.trim().toLowerCase();
@@ -774,7 +853,7 @@ function confirmWheels(id) { const w = allWheels.find(i => i.id === id); if (w.i
             } else if (code === 'pgold+') {
                 player.gold += 500;
                 showMsg("Успех! Зачислено 500 золота", "#f1c40f");
-            } else if (code === 'lvl+p') {
+            } else if (code === 'plvl+') {
                 player.lvl += 5;
                 showMsg("Успех! Уровень повышен на +5", "#3498db");
             } else if (code === 'pfuel+') {
