@@ -109,9 +109,71 @@
             gap: 20px;
         }
 
+         #loading-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle, #222 0%, #111 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader-content {
+            text-align: center;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .loader-title {
+            color: #f1c40f;
+            font-family: 'Arial Black', sans-serif;
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 15px rgba(241, 196, 15, 0.5);
+        }
+
+        .loader-bar-container {
+            width: 100%;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid #444;
+        }
+
+        #loader-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #f1c40f, #e67e22);
+            box-shadow: 0 0 10px #f1c40f;
+            transition: width 0.3s ease;
+        }
+
+        #loader-status {
+            color: #888;
+            margin-top: 15px;
+            font-size: 14px;
+            font-family: sans-serif;
+        }  
+
     </style>
 </head>
 <body>
+
+    <div id="loading-screen">
+        <div class="loader-content">
+            <h1 class="loader-title">Уличные Гонки: Возвращение</h1>
+            <div class="loader-bar-container">
+                <div id="loader-bar-fill"></div>
+            </div>
+            <p id="loader-status">Инициализация двигателей...</p>
+        </div>
+    </div>
 
     <div id="race-modal">
         <div class="modal-content">
@@ -285,7 +347,7 @@
 
 
         const bots = [
-            { name: "ivygood", hp: 2350, lvl: 67 },
+            { name: "ivygood", hp: 3450, lvl: 67 },
             { name: "Sanya_Racer", hp: 220, lvl: 15 },
             { name: "Dimon777", hp: 160, lvl: 8 },
             { name: "Night_Wolf", hp: 130, lvl: 5 },
@@ -398,7 +460,6 @@
             renderAll();
         }
 
-        
         function changeColor(hue) {
             hue = parseInt(hue);
             const carId = player.currentCarId;
@@ -881,6 +942,49 @@ function applyWheels(container, carId) { const carData = carsData[carId]; const 
 
             input.value = '';
         }
+
+        function startLoading() {
+            let progress = 0;
+            const bar = document.getElementById('loader-bar-fill');
+            const status = document.getElementById('loader-status');
+            const messages = [
+                "Прогрев резины...",
+                "Заливка закиси азота...",
+                "Тюнинг кузова...",
+                "Проверка 500+ лошадей...",
+                "Готово к старту!"
+            ];
+
+            const interval = setInterval(() => {
+                progress += Math.random() * 15; // Рандомный шаг загрузки
+                if (progress > 100) progress = 100;
+
+                bar.style.width = progress + "%";
+        
+                // Меняем текст в зависимости от прогресса
+                if (progress < 30) status.innerText = messages[0];
+                else if (progress < 50) status.innerText = messages[1];
+                else if (progress < 70) status.innerText = messages[2];
+                else if (progress < 90) status.innerText = messages[3];
+                else status.innerText = messages[4];
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(hideLoader, 500); // Скрываем через полсекунды после 100%
+                }
+            }, 200);
+        }
+
+        function hideLoader() {
+            const screen = document.getElementById('loading-screen');
+            screen.style.opacity = '0';
+            setTimeout(() => {
+                screen.style.display = 'none';
+            }, 500);
+        }
+
+        // Запускаем при загрузке страницы
+        window.addEventListener('load', startLoading);
 
     </script>
 </body>
