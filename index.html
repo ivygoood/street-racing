@@ -182,7 +182,7 @@
     </style>
 </head>
 <body>
-
+       
     <div id="loading-screen">
         <div class="loader-content">
             <h1 class="loader-title">Уличные Гонки: Возвращение</h1>
@@ -212,11 +212,11 @@
 
     <div class="header">
         <div> <span id="curName">...</span></div>
-        <div class="money">💲 <span id="moneyText">0</span> $</div>
+        <div class="money"><span id="moneyText">0</span> $</div>
         <div style="display: flex; align-items: center; color: #f1c40f; margin: 0 10px;"> <span style="margin-right: 5px;">💰</span> <span id="goldText">0</span> </div>
-        <div class="lvl">⭐ Ур. <span id="lvlText">1</span> (<span id="xpText">0 / 100</span> XP)</div>
+        <div class="lvl">⭐ Ур. <span id="lvlText">1</span> (<span id="xpText">0 / 200</span> XP)</div>
         <div>⚡ <span id="hpText">0</span> л.с.</div>
-        <div>⛽ Бензин: <span id="fuelText">0</span>/<span id="fuelMaxText">25</span></div>
+        <div>⛽ Бензин: <span id="fuelText">0</span>/<span id="fuelMaxText">75</span></div>
     </div>
 
     <div class="nav">
@@ -334,13 +334,17 @@
         'vaz2114':    { name: 'ВАЗ 2114', hp: 77, price: 1100, minLvl: 3, img: 'images/vaz2114.png', width: '450px', bottom: '30px', priceMult: 1.05, wPos: { fL: 70, bL: 330, t: 122, s: 52 } },
         'priora':     { name: 'Lada Priora', hp: 98, price: 5800, minLvl: 5, img: 'images/priora.png', width: '450px', bottom: '30px', priceMult: 1.1, wPos: { fL: 75, bL: 360, t: 128, s: 55 } },
         'granta':     { name: 'Lada Granta', hp: 106, price: 10500, minLvl: 5, img: 'images/granta.png', width: '450px', bottom: '30px', priceMult: 1.2, wPos: { fL: 65, bL: 310, t: 120, s: 52 } },
-        'focus':      { name: 'Ford Focus', hp: 125, price: 14500, minLvl: 8, img: 'images/focus.png', width: '450px', bottom: '30px', priceMult: 1.3, wPos: { fL: 65, bL: 315, t: 125, s: 55 } },
-        'subaru':     { name: 'Subaru Impreza', hp: 333, price: 500, isGold: true, minLvl: 20, img: 'images/subaru.png', width: '450px', bottom: '30px', priceMult: 4.5, wPos: { fL: 70, bL: 335, t: 130, s: 58 } },
+        'focus':      { name: 'Ford Focus', hp: 130, price: 14500, minLvl: 8, img: 'images/focus.png', width: '450px', bottom: '30px', priceMult: 1.3, wPos: { fL: 65, bL: 315, t: 125, s: 55 } },
+        'subaru':     { name: 'Subaru Impreza', hp: 250, price: 300, isGold: true, minLvl: 20, img: 'images/subaru.png', width: '450px', bottom: '30px', priceMult: 4.5, wPos: { fL: 70, bL: 335, t: 130, s: 58 } },
         'skyline':    { name: 'Nissan Skyline', hp: 250, price: 25000, minLvl: 10, img: 'images/skyline.png', width: '450px', bottom: '30px', priceMult: 1.7, wPos: { fL: 80, bL: 390, t: 135, s: 62 } },
         'supra':      { name: 'Toyota Supra', hp: 280, price: 30000, minLvl: 12, img: 'images/supra.png', width: '450px', bottom: '30px', priceMult: 1.8, wPos: { fL: 80, bL: 395, t: 135, s: 62 } },
+        'shelby':     { name: 'Shelby GT500KR', hp: 300, price: 600, isGold: true, minLvl: 25, img: 'images/shelby.png', width: '450px', bottom: '30px', priceMult: 3.1, wPos: { fL: 80, bL: 390, t: 132, s: 62 } },
         'm5':         { name: 'BMW M5 E60', hp: 350, price: 80000, minLvl: 15, img: 'images/m5.png', width: '450px', bottom: '30px', priceMult: 3.1, wPos: { fL: 80, bL: 390, t: 132, s: 62 } },
+        'r8':         { name: 'Audi R8', hp: 450, price: 160000, minLvl: 18, img: 'images/r8.png', width: '450px', bottom: '30px', priceMult: 4, wPos: { fL: 80, bL: 390, t: 132, s: 62 } },
+        'viper':      { name: 'Dodge Viper SRT', hp: 550, price: 1200, isGold: true, minLvl: 30, img: 'images/viper.png', width: '450px', bottom: '30px', priceMult: 4, wPos: { fL: 80, bL: 390, t: 132, s: 62 } },
         'porsche911': { name: 'Porsche 911', hp: 550, price: 280000, minLvl: 22, img: 'images/porsche.png', width: '450px', bottom: '30px', priceMult: 4.8, wPos: { fL: 85, bL: 380, t: 138, s: 65 } },
-        'lambo':      { name: 'Lamborghini Aventador', hp: 900, price: 5000, isGold: true, minLvl: 30, img: 'images/lambo.png', width: '450px', bottom: '30px', priceMult: 15, wPos: { fL: 110, bL: 442, t: 98, s: 62 } },
+        'california': { name: 'Ferrari California', hp: 800, price: 400000, minLvl: 27, img: 'images/california.png', width: '450px', bottom: '30px', priceMult: 7, wPos: { fL: 85, bL: 380, t: 138, s: 65 } },
+        'lambo':      { name: 'Lamborghini Aventador', hp: 900, price: 5000, isGold: true, minLvl: 35, img: 'images/lambo.png', width: '450px', bottom: '30px', priceMult: 15, wPos: { fL: 110, bL: 442, t: 98, s: 62 } },
         };
 
         const allParts = [
@@ -366,21 +370,21 @@
 
         const bots = [
             { name: "ivygood", hp: 3450, lvl: 67 },
-            { name: "Sanya_Racer", hp: 220, lvl: 15 },
+            { name: "Ruls_Rice", hp: 3449, lvl: 67 },
             { name: "Dimon777", hp: 160, lvl: 8 },
             { name: "Night_Wolf", hp: 130, lvl: 5 },
             { name: "Vano_Vaz", hp: 90, lvl: 2 }
         ];
 
         const bossesDB = [
-            { id: 0, carName: "Ford Focus", hp: 500, img: "images/focus.png", entryFee: 10, reward: 20 },
-            { id: 1, carName: "BMW M5 E60", hp: 750, img: "images/m5.png", entryFee: 50, reward: 150 },
-            { id: 2, carName: "Nissan Skyline", hp: 1000, img: "images/skyline.png", entryFee: 200, reward: 500 },
-            { id: 3, carName: "Lamborghini Aventador", hp: 1600, img: "images/lambo.png", entryFee: 500, reward: 1000 }
+            { id: 0, carName: "Subaru Impreza", hp: 400, img: "images/subaru.png", entryFee: 10, reward: 20 },
+            { id: 1, carName: "Shelby GT500KR", hp: 600, img: "images/shelby.png", entryFee: 50, reward: 150 },
+            { id: 2, carName: "Dodge Viper SRT", hp: 850, img: "images/viper.png", entryFee: 200, reward: 500 },
+            { id: 3, carName: "Lamborghini Aventador", hp: 1200, img: "images/lambo.png", entryFee: 500, reward: 1000 }
         ];
 
         let player = JSON.parse(localStorage.getItem('sr_player')) || {
-            money: 500, gold: 10, fuel: 25, maxFuel: 25, // Добавили базу
+            money: 3000, gold: 50, fuel: 75, maxFuel: 75, // Добавили базу
             lvl: 1, xp: 0, bossLvl: 0, bossWins: 0, 
             currentCarId: 'oka', ownedCars: ['oka'],
             carStats: {}, stats: { races: 0, wins: 0, losses: 0, earned: 500, spent: 0 }
@@ -389,15 +393,15 @@
         let currentTab = 'parts'; // По умолчанию при заходе в тюнинг открыты детали
 
         // На случай, если игрок уже играет и у него в localStorage нет maxFuel
-        if (!player.maxFuel) player.maxFuel = 25;
+        if (!player.maxFuel) player.maxFuel = 75;
 
         if (player.gold === undefined) {
-            player.gold = 10; // Выдаем 10 золота тем, у кого его еще нет
+            player.gold = 50; // Выдаем 10 золота тем, у кого его еще нет
             save(); // Сохраняем, чтобы больше не было undefined
         }
 
 
-        window.startBossRace = function() { const b = bossesDB[player.bossLvl || 0]; if (!b) return; if (player.gold < b.entryFee) { alert('Нужно больше золота 💰!'); return; } if (player.fuel < 5) { alert('Нужен бензин ⛽!'); return; } player.gold -= b.entryFee; player.fuel -= 5; const myHp = calculateCarHp(player.currentCarId); const chance = myHp / (myHp + b.hp); if (Math.random() < chance) { player.gold += b.reward; player.bossWins++; if (player.bossWins >= 10) { player.bossWins = 0; player.bossLvl++; alert('БОСС ПОВЕРЖЕН!'); } else { alert('ПОБЕДА!'); } } else { alert('ПОРАЖЕНИЕ!'); } save(); updateUI(); renderAll(); };
+        window.startBossRace = function() { const b = bossesDB[player.bossLvl || 0]; if (!b) return; if (player.gold < b.entryFee) { alert('Нужно больше золота 💰!'); return; } if (player.fuel < 15) { alert('Нужен бензин ⛽!'); return; } player.gold -= b.entryFee; player.fuel -= 5; const myHp = calculateCarHp(player.currentCarId); const chance = myHp / (myHp + b.hp); if (Math.random() < chance) { player.gold += b.reward; player.bossWins++; if (player.bossWins >= 10) { player.bossWins = 0; player.bossLvl++; alert('БОСС ПОВЕРЖЕН!'); } else { alert('ПОБЕДА!'); } } else { alert('ПОРАЖЕНИЕ!'); } save(); updateUI(); renderAll(); };
 
         function startLoading() {
             let progress = 0;
@@ -431,7 +435,7 @@
             }, 200);
         }
 
-        function hideLoader(){const s=document.getElementById('loading-screen');if(s)s.style.opacity='0';setTimeout(()=>{if(s)s.style.display='none';showScreen('garage');if(typeof updateUI==='function')updateUI()},500)}
+       function hideLoader(){const s=document.getElementById('loading-screen');if(s)s.style.opacity='0';setTimeout(()=>{if(s)s.style.display='none';showScreen('garage');if(typeof updateUI==='function')updateUI()},500)}
                 // Запускаем при загрузке страницы
         window.addEventListener('load', startLoading);
         
@@ -454,9 +458,9 @@
             document.getElementById('hpText').innerText = calculateCarHp(player.currentCarId);
             document.getElementById('curName').innerText = car.name;
             document.getElementById('lvlText').innerText = player.lvl;
-            document.getElementById('xpText').innerText = player.xp + " / " + (player.lvl * 100);
+            document.getElementById('xpText').innerText = player.xp + " / " + (player.lvl * 200);
             document.getElementById('fuelText').innerText = Math.floor(player.fuel);
-            document.getElementById('fuelMaxText').innerText = player.maxFuel || 25;
+            document.getElementById('fuelMaxText').innerText = player.maxFuel || 75;
             
             // Обновляем картинки везде
             const mainImg = document.getElementById('mainCar');
@@ -768,7 +772,7 @@
         function buyCar(id) { if (typeof playSfx === 'function') playSfx('click'); const c = carsData[id]; if (player.ownedCars.includes(id)) return; if (c.isGold) { if (player.gold >= c.price) { player.gold -= c.price; player.ownedCars.push(id); if (!player.carStats[id]) player.carStats[id] = { parts: {}, color: 0 }; save(); updateUI(); renderAll(); showScreen('garage'); } else { alert('Нужно больше золота 💰!'); } } else { if (player.money >= c.price) { player.money -= c.price; player.stats.spent += c.price; player.ownedCars.push(id); if (!player.carStats[id]) player.carStats[id] = { parts: {}, color: 0 }; save(); updateUI(); renderAll(); showScreen('garage'); } else { alert('Недостаточно денег!'); } } }
         function openRace(idx){if(typeof playSfx==='function')playSfx('click');const btn=document.getElementById('confirm-race-btn');btn.classList.add('active-sheen');btn.innerText="УЧАСТВОВАТЬ!";activeIdx=idx;const enemy=currentEnemies[idx],myCar=carsData[player.currentCarId],myHp=calculateCarHp(player.currentCarId);document.getElementById('race-modal').style.display='flex';document.getElementById('pre-race-result').innerText='';btn.style.display='block';btn.onclick=function(){startNormalRace()};document.getElementById('my-race-card').innerHTML='<div class="race-card-modal"><div class="img-wrapper"><img id="my-race-img" src="'+myCar.img+'" style="width: 100%"></div><h3>Твоя тачка</h3><p>'+myHp+' л.с.</p></div>';document.getElementById('enemy-race-card').innerHTML='<div class="race-card-modal"><div class="img-wrapper"><img id="enemy-race-img" src="'+enemy.img+'" style="width: 100%"></div><h3>'+enemy.name+'</h3><p>'+enemy.hp+' л.с.</p></div>';const myHue=player.carStats[player.currentCarId]?.color||0,myImg=document.getElementById('my-race-img');if(myImg)myImg.style.filter=myHue===0?"":"hue-rotate("+myHue+"deg)"}
         
-        function startNormalRace(){const btn=document.getElementById('confirm-race-btn'),res=document.getElementById('pre-race-result');if(player.fuel<=0){res.innerHTML='<span style="color:#e74c3c;font-weight:bold;animation:shake 0.3s">БЕНЗИН НА НУЛЕ! ⛽</span>';btn.style.background='#c0392b';setTimeout(()=>{btn.style.background='';res.innerText=""},1500);return}btn.classList.add('active-sheen');playSfx('engine');const myImg=document.getElementById('my-race-img'),enImg=document.getElementById('enemy-race-img');myImg.classList.add('race-shake');enImg.classList.add('race-shake');btn.style.display='none';setTimeout(()=>{myImg.classList.remove('race-shake');enImg.classList.remove('race-shake');player.fuel--;player.stats.races++;const enemy=currentEnemies[activeIdx],myHp=calculateCarHp(player.currentCarId),winChance=myHp>enemy.hp?0.85:Math.pow(myHp/enemy.hp,3),win=Math.random()<winChance;if(win){player.money+=enemy.prize;player.xp+=5;player.stats.wins++;player.stats.earned+=enemy.prize;res.innerText="ПОБЕДА! +"+enemy.prize+"$";res.style.color="lime"}else{player.stats.losses++;res.innerText="ПРОИГРЫШ!";res.style.color="red"}let xpNeeded=player.lvl*200;if(player.xp>=xpNeeded){player.xp=0;player.lvl++;player.money+=300;player.stats.earned+=300;res.innerHTML='<div style="color:#f1c40f;font-weight:bold;animation:pulse 1s infinite">НОВЫЙ УРОВЕНЬ! +300$</div>'}btn.innerText="ЕЩЁ РАЗ?";btn.style.display='block';btn.onclick=function(){startNormalRace()};save();updateUI()},2000)}
+        function startNormalRace(){const btn=document.getElementById('confirm-race-btn'),res=document.getElementById('pre-race-result');if(player.fuel<=0){res.innerHTML='<span style="color:#e74c3c;font-weight:bold;animation:shake 0.3s">БЕНЗИН НА НУЛЕ! ⛽</span>';btn.style.background='#c0392b';setTimeout(()=>{btn.style.background='';res.innerText=""},1500);return}btn.classList.add('active-sheen');playSfx('engine');const myImg=document.getElementById('my-race-img'),enImg=document.getElementById('enemy-race-img');myImg.classList.add('race-shake');enImg.classList.add('race-shake');btn.style.display='none';setTimeout(()=>{myImg.classList.remove('race-shake');enImg.classList.remove('race-shake');player.fuel--;player.stats.races++;const enemy=currentEnemies[activeIdx],myHp=calculateCarHp(player.currentCarId),winChance=myHp>enemy.hp?0.85:Math.pow(myHp/enemy.hp,3),win=Math.random()<winChance;if(win){player.money+=enemy.prize;player.xp+=5;player.stats.wins++;player.stats.earned+=enemy.prize;res.innerText="ПОБЕДА! +"+enemy.prize+"$";res.style.color="lime"}else{player.stats.losses++;res.innerText="ПРОИГРЫШ!";res.style.color="red"}let xpNeeded=player.lvl*200;if(player.xp>=xpNeeded){player.xp=0;player.lvl++;player.money+=300;player.stats.earned+=300;res.innerHTML='<div style="color:#f1c40f;font-weight:bold;animation:pulse 1s infinite">НОВЫЙ УРОВЕНЬ! +500$</div>'}btn.innerText="ЕЩЁ РАЗ?";btn.style.display='block';btn.onclick=function(){startNormalRace()};save();updateUI()},2000)}
 
 
 
@@ -804,22 +808,22 @@
         function getMaxHp(carId) { const c = carsData[carId]; let total = c.hp; Object.keys(allParts).forEach(pId => { const p = allParts[pId]; const maxLvl = p.id === 'nos_system' ? 1 : 3; total += p.baseHp * maxLvl; }); return total; }
         function generateEnemies() { const myHp = calculateCarHp(player.currentCarId); currentEnemies = []; const keys = Object.keys(carsData); for (let i = 0; i < 3; i++) { const randomKey = keys[Math.floor(Math.random() * keys.length)]; const mod = carsData[randomKey]; const carMaxHp = getMaxHp(randomKey); let targetHp = Math.floor(myHp * (0.85 + Math.random() * 0.3)); if (targetHp > carMaxHp) { targetHp = carMaxHp; } currentEnemies.push({ name: mod.name, img: mod.img, hp: targetHp, prize: Math.floor(targetHp / 1.5), xp: 5 }); } renderAll(); }        
         function save() { localStorage.setItem('sr_player', JSON.stringify(player)); }
-        setInterval(() => { if(player.fuel < 25){ player.fuel++; save(); updateUI(); } }, 180000);
+        setInterval(() => { if(player.fuel < 75){ player.fuel++; save(); updateUI(); } }, 180000);
         generateEnemies(); updateUI();
                 // 1. Делаем бензин в шапке кликабельным
         document.querySelector('.header div:last-child').style.cursor = 'pointer';
         document.querySelector('.header div:last-child').onclick = function() {
             document.getElementById('fuel-now').innerText = player.fuel; // Показываем текущий бензин
             document.getElementById('fuel-shop-modal').style.display = 'flex';
-            document.getElementById('fuel-max-display').innerText = player.maxFuel || 25;
+            document.getElementById('fuel-max-display').innerText = player.maxFuel || 75;
 
         };
 
         // 2. Функция покупки
-        function updateFuelUI() { document.getElementById('fuel-now').innerText = player.fuel; document.getElementById('fuel-max-display').innerText = player.maxFuel || 25; }
-        function buyFuel(amount, cost) { let max = player.maxFuel || 25; if (player.money >= cost) { if (player.fuel >= max) { alert("Бак уже полон!"); return; } player.money -= cost; player.fuel = Math.min(max, player.fuel + amount); saveAndRefresh(); } else { alert("Недостаточно денег!"); } }
-        function showFuelAd() { let max = player.maxFuel || 25; if (player.fuel >= max) { alert("Бак полон!"); return; } if (confirm("Посмотреть рекламу (+5 литров)?")) { player.fuel = Math.min(max, player.fuel + 5); saveAndRefresh(); alert("Готово! +5 литров."); } }
-        function upgradeTank() { let upgradeCost = 500; if (player.gold >= upgradeCost) { player.gold -= upgradeCost; player.maxFuel = (player.maxFuel || 25) + 5; saveAndRefresh(); alert("Емкость бака увеличена до " + player.maxFuel + "л!"); } else { alert("Недостаточно золота!"); } }
+        function updateFuelUI() { document.getElementById('fuel-now').innerText = player.fuel; document.getElementById('fuel-max-display').innerText = player.maxFuel || 75; }
+        function buyFuel(amount, cost) { let max = player.maxFuel || 75; if (player.money >= cost) { if (player.fuel >= max) { alert("Бак уже полон!"); return; } player.money -= cost; player.fuel = Math.min(max, player.fuel + amount); saveAndRefresh(); } else { alert("Недостаточно денег!"); } }
+        function showFuelAd() { let max = player.maxFuel || 75; if (player.fuel >= max) { alert("Бак полон!"); return; } if (confirm("Посмотреть рекламу (+5 литров)?")) { player.fuel = Math.min(max, player.fuel + 5); saveAndRefresh(); alert("Готово! +5 литров."); } }
+        function upgradeTank() { let upgradeCost = 500; if (player.gold >= upgradeCost) { player.gold -= upgradeCost; player.maxFuel = (player.maxFuel || 75) + 15; saveAndRefresh(); alert("Емкость бака увеличена до " + player.maxFuel + "л!"); } else { alert("Недостаточно золота!"); } }
         function saveAndRefresh() { if(typeof save === "function") save(); else if(typeof saveGame === "function") saveGame(); if(typeof updateUI === "function") updateUI(); updateFuelUI(); }
 
         function openBossRace(){const b=bossesDB[player.bossLvl||0],modal=document.getElementById('race-modal'),content=modal.querySelector('.modal-content')||modal.firstElementChild;if(content){content.style.maxWidth='800px';content.style.padding='15px 20px';const cardsWrap=content.querySelector('.race-cards-wrap')||content.querySelector('div[style*="display"]');if(cardsWrap){cardsWrap.style.display='flex';cardsWrap.style.justifyContent='center';cardsWrap.style.alignItems='center';cardsWrap.style.gap='20px';cardsWrap.style.width='100%';cardsWrap.style.margin='0 auto'}}modal.style.display='flex';document.getElementById('pre-race-result').innerText='';const myCar=carsData[player.currentCarId],myHp=calculateCarHp(player.currentCarId),myHue=player.carStats[player.currentCarId]?.color||0;document.getElementById('my-race-card').innerHTML=`<div class="race-card-modal" style="margin:0; flex: 0 1 auto;"><div class="img-wrapper"><img id="my-race-img" src="${myCar.img}" style="width:100%;${myHue?`filter:hue-rotate(${myHue}deg)`:''}"></div><h3>Твоя тачка</h3><p>${myHp} л.с.</p></div>`;document.getElementById('enemy-race-card').innerHTML=`<div class="race-card-modal" style="border:1px solid #f1c40f; margin:0; flex: 0 1 auto;"><div class="img-wrapper"><img id="enemy-race-img" src="${b.img}" style="width:100%"></div><h3>${b.carName}</h3><p style="margin-bottom:5px">${b.hp} л.с.</p><div style="line-height:1.2"><p style="color:#f1c40f;font-weight:bold;margin:0;font-size:14px;text-transform:uppercase">БОСС</p><p style="font-size:11px;color:#aaa;margin:0">ПОБЕД: ${(player.bossWins||0)} / 10</p></div></div>`;window.currentEnemy={name:b.carName,hp:b.hp,isBoss:true,rewardGold:b.reward,fee:b.entryFee};const cBtn=document.getElementById('confirm-race-btn');cBtn.classList.add('active-sheen');cBtn.style.display='block';cBtn.innerText='УЧАСТВОВАТЬ!';document.getElementById('pre-race-result').innerHTML=`<p style="font-size:12px;color:#888;margin:0">Стоимость заезда: ${b.entryFee} 💰</p>`;cBtn.onclick=function(){startBossBattleLogic()}}
@@ -828,11 +832,11 @@
         // Новая логика для кнопки внутри окна
     function processBossRaceLogic() {
             const b = window.currentEnemy;
-            if (player.fuel < 5) { alert("Нужен бензин ⛽"); return; }
+            if (player.fuel < 15) { alert("Нужен бензин ⛽"); return; }
 
             // Снимаем взнос и бензин
             player.gold -= bossesDB[player.bossLvl].entryFee;
-            player.fuel -= 5;
+            player.fuel -= 15;
             updateUI();
 
             // Запускаем ТВОЙ звук и ТВОЮ анимацию (если функция называется по-другому, поправь название)
@@ -873,7 +877,7 @@
             }, 1500); // 1.5 секунды на "анимацию"
         }
 
-function startBossBattleLogic(){const b=window.currentEnemy;if(!b)return;const res=document.getElementById('pre-race-result'),btn=document.getElementById('confirm-race-btn');if(player.gold<b.fee){res.innerHTML='<span style="color:#e74c3c;font-weight:bold;animation:shake 0.3s">НУЖНО БОЛЬШЕ ЗОЛОТА! 💰</span>';btn.style.background='#c0392b';setTimeout(()=>{btn.style.background='';res.innerHTML=`<p style="font-size:12px;color:#888;margin:0">Стоимость заезда: ${b.fee} 💰</p>`},1500);return}if(player.fuel<5){res.innerHTML='<span style="color:#e74c3c;font-weight:bold;animation:shake 0.3s">НУЖЕН БЕНЗИН! ⛽</span>';btn.style.background='#c0392b';setTimeout(()=>{btn.style.background='';res.innerHTML=`<p style="font-size:12px;color:#888;margin:0">Стоимость заезда: ${b.fee} 💰</p>`},1500);return}if(typeof playSfx==='function')playSfx('engine');player.gold-=b.fee;player.fuel-=5;updateUI();const myImg=document.getElementById('my-race-img'),enImg=document.getElementById('enemy-race-img'),modal=document.getElementById('race-modal');if(myImg)myImg.classList.add('race-shake');if(enImg)enImg.classList.add('race-shake');btn.style.display='none';res.innerText='Заезд...';setTimeout(()=>{if(myImg)myImg.classList.remove('race-shake');if(enImg)enImg.classList.remove('race-shake');const myHp=calculateCarHp(player.currentCarId);let winChance=0;if(myHp>=b.hp){winChance=(myHp/b.hp>=1.2)?0.99:0.9}else{let diff=b.hp-myHp;winChance=Math.max(0.01,0.5*Math.pow(0.5,diff/40))}if(Math.random()<winChance){player.gold+=b.rewardGold;player.bossWins=(player.bossWins||0)+1;const winCounter=document.querySelector('#enemy-race-card p[style*="color:#aaa"]');if(winCounter)winCounter.innerText='ПОБЕД: '+(player.bossWins)+' / 10';if(player.bossWins>=10){player.bossWins=0;player.bossLvl=(player.bossLvl||0)+1;res.innerHTML='<div style="color:#f1c40f;font-size:20px;font-weight:bold;text-transform:uppercase;margin:15px 0">Босс побежден!<br><span style="font-size:14px;color:#fff;font-weight:normal">Новый босс ждет тебя!</span></div>';btn.innerText='ДАЛЕЕ';btn.onclick=function(){if(modal)modal.style.display='none';renderAll()}}else{res.innerHTML='<span style="color:#2ecc71;font-size:18px;font-weight:bold">ПОБЕДА! +'+b.rewardGold+' 💰</span>';btn.innerText='ЕЩЕ ЗАЕЗД';btn.onclick=function(){startBossBattleLogic()}}}else{res.innerHTML='<span style="color:#e74c3c;font-size:18px;font-weight:bold">ПОРАЖЕНИЕ!</span>';btn.innerText='РЕВАНШ';btn.onclick=function(){startBossBattleLogic()}}btn.style.display='block';save();updateUI();renderAll()},1500)}
+function startBossBattleLogic(){const b=window.currentEnemy;if(!b)return;const res=document.getElementById('pre-race-result'),btn=document.getElementById('confirm-race-btn');if(player.gold<b.fee){res.innerHTML='<span style="color:#e74c3c;font-weight:bold;animation:shake 0.3s">НУЖНО БОЛЬШЕ ЗОЛОТА! 💰</span>';btn.style.background='#c0392b';setTimeout(()=>{btn.style.background='';res.innerHTML=`<p style="font-size:12px;color:#888;margin:0">Стоимость заезда: ${b.fee} 💰</p>`},1500);return}if(player.fuel<15){res.innerHTML='<span style="color:#e74c3c;font-weight:bold;animation:shake 0.3s">НУЖЕН БЕНЗИН! ⛽</span>';btn.style.background='#c0392b';setTimeout(()=>{btn.style.background='';res.innerHTML=`<p style="font-size:12px;color:#888;margin:0">Стоимость заезда: ${b.fee} 💰</p>`},1500);return}if(typeof playSfx==='function')playSfx('engine');player.gold-=b.fee;player.fuel-=15;updateUI();const myImg=document.getElementById('my-race-img'),enImg=document.getElementById('enemy-race-img'),modal=document.getElementById('race-modal');if(myImg)myImg.classList.add('race-shake');if(enImg)enImg.classList.add('race-shake');btn.style.display='none';res.innerText='Заезд...';setTimeout(()=>{if(myImg)myImg.classList.remove('race-shake');if(enImg)enImg.classList.remove('race-shake');const myHp=calculateCarHp(player.currentCarId);let winChance=0;if(myHp>=b.hp){winChance=(myHp/b.hp>=1.2)?0.99:0.9}else{let diff=b.hp-myHp;winChance=Math.max(0.01,0.5*Math.pow(0.5,diff/40))}if(Math.random()<winChance){player.gold+=b.rewardGold;player.bossWins=(player.bossWins||0)+1;const winCounter=document.querySelector('#enemy-race-card p[style*="color:#aaa"]');if(winCounter)winCounter.innerText='ПОБЕД: '+(player.bossWins)+' / 10';if(player.bossWins>=10){player.bossWins=0;player.bossLvl=(player.bossLvl||0)+1;res.innerHTML='<div style="color:#f1c40f;font-size:20px;font-weight:bold;text-transform:uppercase;margin:15px 0">Босс побежден!<br><span style="font-size:14px;color:#fff;font-weight:normal">Новый босс ждет тебя!</span></div>';btn.innerText='ДАЛЕЕ';btn.onclick=function(){if(modal)modal.style.display='none';renderAll()}}else{res.innerHTML='<span style="color:#2ecc71;font-size:18px;font-weight:bold">ПОБЕДА! +'+b.rewardGold+' 💰</span>';btn.innerText='ЕЩЕ ЗАЕЗД';btn.onclick=function(){startBossBattleLogic()}}}else{res.innerHTML='<span style="color:#e74c3c;font-size:18px;font-weight:bold">ПОРАЖЕНИЕ!</span>';btn.innerText='РЕВАНШ';btn.onclick=function(){startBossBattleLogic()}}btn.style.display='block';save();updateUI();renderAll()},1500)}
 function sellCurrentCar() { const modal = document.getElementById('sell-modal'); const content = document.getElementById('sell-content'); const error = document.getElementById('sell-error'); const success = document.getElementById('sell-success'); modal.style.display = 'flex'; content.style.display = 'none'; error.style.display = 'none'; success.style.display = 'none'; if (player.ownedCars.length <= 1) { error.style.display = 'block'; } else { content.style.display = 'block'; const c = carsData[player.currentCarId]; const price = Math.floor(c.price * 0.7); document.getElementById('sell-text').innerText = "Продать " + c.name + "?"; document.getElementById('sell-price-display').innerText = price + (c.isGold ? " 💰" : " $"); } }
 function confirmSale() { const id = player.currentCarId; const c = carsData[id]; const price = Math.floor(c.price * 0.7); if (c.isGold) player.gold += price; else player.money += price; player.ownedCars = player.ownedCars.filter(car => car !== id); delete player.carStats[id]; player.currentCarId = player.ownedCars[0]; save(); updateUI(); renderAll(); document.getElementById('sell-content').style.display = 'none'; document.getElementById('sell-success').style.display = 'block'; }
 function closeSellModal() { document.getElementById('sell-modal').style.display = 'none'; document.getElementById('sell-content').style.display = 'block'; document.getElementById('sell-success').style.display = 'none'; showScreen('garage'); }  
@@ -884,6 +888,7 @@ function previewWheels(wheelId){window.tempWheelId=wheelId;if(typeof playSfx==='
 function confirmWheels(id) { const w = allWheels.find(i => i.id === id); if (w.isGold ? player.gold < w.price : player.money < w.price) return alert("Недостаточно средств!"); w.isGold ? player.gold -= w.price : player.money -= w.price; if(!player.carStats[player.currentCarId]) player.carStats[player.currentCarId] = {parts:{}}; player.carStats[player.currentCarId].wheels = id; save(); updateUI(); renderAll(); }
 
 function applyWheels(container, carId) { const carData = carsData[carId]; const stats = player.carStats[carId]; container.querySelectorAll('.wheel').forEach(w => w.remove()); if (!carData || !stats || !stats.wheels || stats.wheels === 'stock') return; const wPos = carData.wPos || { fL: 64, bL: 18, t: 65, s: 15 }; const wheelId = stats.wheels; ['f', 'b'].forEach(type => { const w = document.createElement('div'); w.className = 'wheel wheel-' + type; w.style.position = 'absolute'; w.style.zIndex = '100'; w.style.backgroundImage = 'url(images/' + wheelId + '.png)'; w.style.backgroundSize = 'contain'; w.style.backgroundRepeat = 'no-repeat'; w.style.backgroundPosition = 'center'; w.style.left = (type === 'f' ? wPos.fL : wPos.bL) + '%'; w.style.top = wPos.t + '%'; w.style.width = w.style.height = wPos.s + '%'; container.appendChild(w); }); } 
+
  
         function activatePromo() {
             const input = document.getElementById('promo-input');
@@ -909,7 +914,7 @@ function applyWheels(container, carId) { const carData = carsData[carId]; const 
                 player.lvl += 5;
                 showMsg("Успех! Уровень повышен на +5", "#3498db");
             } else if (code === 'pfuel+') {
-                player.fuel = player.maxFuel || 25;
+                player.fuel = player.maxFuel || 75;
                 showMsg("Бак полностью заправлен!", "#e67e22");
             } else if (code === 'reset') {
                 if (confirm("ТЫ УВЕРЕН? Весь прогресс, машины и золото будут удалены навсегда!")) {
@@ -946,7 +951,7 @@ function applyWheels(container, carId) { const carData = carsData[carId]; const 
         <div style="background: #111; padding: 15px; border-radius: 10px; border: 1px solid #333; margin-bottom: 20px;">
             <span style="color: #eee;">Бензин в баке:</span> 
             <span id="fuel-now" style="color: #f1c40f; font-weight: bold; font-size: 20px;">0</span> 
-            <span style="color: #555;">/ <span id="fuel-max-display">25</span></span>
+            <span style="color: #555;">/ <span id="fuel-max-display">75</span></span>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -955,7 +960,7 @@ function applyWheels(container, carId) { const carData = carsData[carId]; const 
             <button id="ad-fuel-btn" class="btn-action" onclick="showFuelAd()" style="background: #3498db;">+5 ЛИТРОВ (ЗА РЕКЛАМУ)</button>
             
             <!-- Новая кнопка -->
-            <button class="btn-action" onclick="upgradeTank()" style="background: #f1c40f; color: #000; font-weight: bold; margin-top: 10px;">УВЕЛИЧИТЬ БАК (+5л) — 500 ЗОЛОТА</button>
+            <button class="btn-action" onclick="upgradeTank()" style="background: #f1c40f; color: #000; font-weight: bold; margin-top: 10px;">УВЕЛИЧИТЬ БАК (+15л) — 500 ЗОЛОТА</button>
         </div>
 
         <button onclick="document.getElementById('fuel-shop-modal').style.display='none'" style="background:none; border:none; color:#555; cursor:pointer; margin-top:20px; text-decoration: underline; font-size: 12px; text-transform: uppercase;">Вернуться в гараж</button>
