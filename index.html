@@ -803,7 +803,7 @@
         }        
         function getMaxHp(carId) { const c = carsData[carId]; let total = c.hp; Object.keys(allParts).forEach(pId => { const p = allParts[pId]; const maxLvl = p.id === 'nos_system' ? 1 : 3; total += p.baseHp * maxLvl; }); return total; }
         function generateEnemies() { const myHp = calculateCarHp(player.currentCarId); currentEnemies = []; const keys = Object.keys(carsData); for (let i = 0; i < 3; i++) { const randomKey = keys[Math.floor(Math.random() * keys.length)]; const mod = carsData[randomKey]; const carMaxHp = getMaxHp(randomKey); let targetHp = Math.floor(myHp * (0.85 + Math.random() * 0.3)); if (targetHp > carMaxHp) { targetHp = carMaxHp; } currentEnemies.push({ name: mod.name, img: mod.img, hp: targetHp, prize: Math.floor(targetHp / 1.5), xp: 5 }); } renderAll(); }        
-        function save() { localStorage.setItem('sr_player', JSON.stringify(player)); saveToCloud(); }
+        function save() { localStorage.setItem('sr_player', JSON.stringify(player)); }
         setInterval(() => { if(player.fuel < 25){ player.fuel++; save(); updateUI(); } }, 180000);
         generateEnemies(); updateUI();
                 // 1. Делаем бензин в шапке кликабельным
@@ -935,69 +935,6 @@ function applyWheels(container, carId) { const carData = carsData[carId]; const 
         }
 
     </script>
-
-!-- 1. БИБЛИОТЕКИ (Вставлять СТРОГО раздельно) -->
-<script src="https://gstatic.com"></script>
-<script src="https://gstatic.com"></script>
-<script src="https://gstatic.com"></script>
-
-<!-- 2. ЛОГИКА БАЗЫ ДАННЫХ -->
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyD9P8DTWFE7Z6uM-fDArVVERPBUoKG9000",
-    authDomain: "://firebaseapp.com",
-    databaseURL: "https://firebaseio.com", 
-    projectId: "streetracinggame-68023",
-    storageBucket: "streetracinggame-68023.firebasestorage.app",
-    messagingSenderId: "555964280377",
-    appId: "1:555964280377:web:69aa304a020a2b8e37e7e8"
-  };
-
-  if (typeof firebase !== 'undefined') {
-    firebase.initializeApp(firebaseConfig);
-    window.db = firebase.database();
-    window.auth = firebase.auth();
-    
-    // Функции для работы с облаком
-    window.saveToCloud = function() {
-        if (auth.currentUser && typeof player !== 'undefined') {
-            db.ref('users/' + auth.currentUser.uid).set(player);
-            console.log("Сохранено в облако!");
-        }
-    };
-
-    window.loadFromCloud = function() {
-        if (auth.currentUser) {
-            db.ref('users/' + auth.currentUser.uid).once('value').then(s => {
-                if (s.exists() && typeof player !== 'undefined') {
-                    Object.assign(player, s.val());
-                    if (typeof updateUI === 'function') updateUI();
-                    if (typeof renderAll === 'function') renderAll();
-                    console.log("Данные загружены из облака!");
-                }
-            });
-        }
-    };
-
-    window.authPlayer = function(email, pass) {
-        auth.signInWithEmailAndPassword(email, pass)
-            .then(() => { console.log("Вход выполнен!"); loadFromCloud(); })
-            .catch(() => {
-                auth.createUserWithEmailAndPassword(email, pass)
-                    .then(() => { console.log("Аккаунт создан!"); saveToCloud(); })
-                    .catch(err => alert("Ошибка: " + err.message));
-            });
-    };
-    
-    // Авто-загрузка при обновлении страницы, если уже залогинен
-    auth.onAuthStateChanged(user => { if (user) loadFromCloud(); });
-
-    console.log("Firebase готов!");
-  } else {
-    console.error("Ошибка загрузки библиотек Firebase!");
-  }
-</script>
-
 </body>
 </html>
 
