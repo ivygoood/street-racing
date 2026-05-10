@@ -177,6 +177,30 @@
           animation: sheen 2.5s infinite;
         }
 
+        .modal {
+            display: none; /* Скрыто по умолчанию */
+            position: fixed;
+            z-index: 100;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7); /* Полупрозрачный фон */
+        }
+
+        .modal-content {
+            background-color: #222;
+            color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #ff0000; /* В стиле вашей игры */
+            width: 300px;
+            text-align: center;
+        }
+
+        .close {
+            float: right;
+            cursor: pointer;
+            font-size: 24px;
+        }
 
 
     </style>
@@ -211,13 +235,18 @@
 
 
     <div class="header">
-        <div> <span id="curName">...</span></div>
-        <div class="money"><span id="moneyText">0</span> $</div>
-        <div style="display: flex; align-items: center; color: #f1c40f; margin: 0 10px;"> <span style="margin-right: 5px;">💰</span> <span id="goldText">0</span> </div>
-        <div class="lvl">⭐ Ур. <span id="lvlText">1</span> (<span id="xpText">0 / 200</span> XP)</div>
-        <div>⚡ <span id="hpText">0</span> л.с.</div>
-        <div>⛽ Бензин: <span id="fuelText">0</span>/<span id="fuelMaxText">75</span></div>
-    </div>
+         <div> <span id="curName">...</span></div>
+         <!-- Нажатие на баксы -->
+         <div class="money" onclick="openExchangeModal()" style="cursor: pointer;"><span id="moneyText">0</span> $</div>
+         <!-- Нажатие на золото -->
+         <div style="display: flex; align-items: center; color: #f1c40f; margin: 0 10px; cursor: pointer;" onclick="openExchangeModal()"> 
+            <span style="margin-right: 5px;">💰</span> <span id="goldText">0</span> 
+         </div>
+         <div class="lvl">⭐ Ур. <span id="lvlText">1</span> (<span id="xpText">0 / 200</span> XP)</div>
+         <div>⚡ <span id="hpText">0</span> л.с.</div>
+         <div>⛽ Бензин: <span id="fuelText">0</span>/<span id="fuelMaxText">75</span></div>
+     </div>
+
 
     <div class="nav">
         <button id="nav-garage" class="active" onclick="showScreen('garage')">ГАРАЖ</button>
@@ -383,6 +412,20 @@
             { id: 3, carName: "Lamborghini Aventador", hp: 1200, img: "images/lambo.png", entryFee: 500, reward: 1000 }
         ];
 
+        // Вызывать при старте страницы
+        document.addEventListener("DOMContentLoaded", function() {
+            let savedBucks = localStorage.getItem('userBucks');
+            let savedGold = localStorage.getItem('userGold');
+
+            if (savedBucks !== null) {
+                document.getElementById('moneyText').innerText = parseInt(savedBucks).toLocaleString();
+            }
+            if (savedGold !== null) {
+                document.getElementById('goldText').innerText = parseInt(savedGold).toLocaleString();
+            }
+        });
+
+
         let player = JSON.parse(localStorage.getItem('sr_player')) || {
             money: 3000, gold: 50, fuel: 75, maxFuel: 75, // Добавили базу
             lvl: 1, xp: 0, bossLvl: 0, bossWins: 0, 
@@ -400,6 +443,55 @@
             save(); // Сохраняем, чтобы больше не было undefined
         }
 
+        function openExchangeModal() {
+            // Подтягиваем текущие значения из текста в хедере
+            const currentMoney = document.getElementById('moneyText').innerText;
+            const currentGold = document.getElementById('goldText').innerText;
+    
+            // Обновляем текст внутри модального окна
+            document.getElementById('current-bucks-display').innerText = currentMoney + ' $';
+            document.getElementById('current-gold-display').innerText = currentGold;
+    
+            // Показываем окно
+            document.getElementById('exchange-modal').style.display = 'flex';
+        }
+
+        function exchangeMoneyToGold() {
+            let btn = document.querySelector('#exchange-modal .btn-action');
+            const cost = 50000;
+            const reward = 10;
+            const originalText = "Обменять 50.000$ на 10 золота";
+
+            // Используем ваш объект player
+            if (player.money >= cost) {
+                // 1. Проводим расчеты в объекте игрока
+                player.money -= cost;
+                // Если у вас золото в объекте называется gold, меняем его
+                player.gold = (player.gold || 0) + reward;
+
+                // 2. Используем вашу родную функцию для сохранения и обновления экрана
+                saveAndRefresh();
+
+                // 3. Дополнительно обновляем цифры внутри самого модального окна
+                if(document.getElementById('current-bucks-display')) {
+                    document.getElementById('current-bucks-display').innerText = player.money.toLocaleString() + ' $';
+                }
+                if(document.getElementById('current-gold-display')) {
+                    document.getElementById('current-gold-display').innerText = player.gold.toLocaleString();
+                }
+            } else {
+                // Если денег нет — меняем текст кнопки (как вы и хотели)
+                btn.innerText = "НЕДОСТАТОЧНО СРЕДСТВ";
+                btn.style.background = "#555";
+                btn.style.pointerEvents = "none";
+
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.background = "#f00";
+                    btn.style.pointerEvents = "auto";
+                }, 2000);
+            }
+        }
 
         window.startBossRace = function() { const b = bossesDB[player.bossLvl || 0]; if (!b) return; if (player.gold < b.entryFee) { alert('Нужно больше золота 💰!'); return; } if (player.fuel < 15) { alert('Нужен бензин ⛽!'); return; } player.gold -= b.entryFee; player.fuel -= 5; const myHp = calculateCarHp(player.currentCarId); const chance = myHp / (myHp + b.hp); if (Math.random() < chance) { player.gold += b.reward; player.bossWins++; if (player.bossWins >= 10) { player.bossWins = 0; player.bossLvl++; alert('БОСС ПОВЕРЖЕН!'); } else { alert('ПОБЕДА!'); } } else { alert('ПОРАЖЕНИЕ!'); } save(); updateUI(); renderAll(); };
 
@@ -878,8 +970,8 @@
         }
 
 function startBossBattleLogic(){const b=window.currentEnemy;if(!b)return;const res=document.getElementById('pre-race-result'),btn=document.getElementById('confirm-race-btn');if(player.gold<b.fee){res.innerHTML='<span style="color:#e74c3c;font-weight:bold;animation:shake 0.3s">НУЖНО БОЛЬШЕ ЗОЛОТА! 💰</span>';btn.style.background='#c0392b';setTimeout(()=>{btn.style.background='';res.innerHTML=`<p style="font-size:12px;color:#888;margin:0">Стоимость заезда: ${b.fee} 💰</p>`},1500);return}if(player.fuel<15){res.innerHTML='<span style="color:#e74c3c;font-weight:bold;animation:shake 0.3s">НУЖЕН БЕНЗИН! ⛽</span>';btn.style.background='#c0392b';setTimeout(()=>{btn.style.background='';res.innerHTML=`<p style="font-size:12px;color:#888;margin:0">Стоимость заезда: ${b.fee} 💰</p>`},1500);return}if(typeof playSfx==='function')playSfx('engine');player.gold-=b.fee;player.fuel-=15;updateUI();const myImg=document.getElementById('my-race-img'),enImg=document.getElementById('enemy-race-img'),modal=document.getElementById('race-modal');if(myImg)myImg.classList.add('race-shake');if(enImg)enImg.classList.add('race-shake');btn.style.display='none';res.innerText='Заезд...';setTimeout(()=>{if(myImg)myImg.classList.remove('race-shake');if(enImg)enImg.classList.remove('race-shake');const myHp=calculateCarHp(player.currentCarId);let winChance=0;if(myHp>=b.hp){winChance=(myHp/b.hp>=1.2)?0.99:0.9}else{let diff=b.hp-myHp;winChance=Math.max(0.01,0.5*Math.pow(0.5,diff/40))}if(Math.random()<winChance){player.gold+=b.rewardGold;player.bossWins=(player.bossWins||0)+1;const winCounter=document.querySelector('#enemy-race-card p[style*="color:#aaa"]');if(winCounter)winCounter.innerText='ПОБЕД: '+(player.bossWins)+' / 10';if(player.bossWins>=10){player.bossWins=0;player.bossLvl=(player.bossLvl||0)+1;res.innerHTML='<div style="color:#f1c40f;font-size:20px;font-weight:bold;text-transform:uppercase;margin:15px 0">Босс побежден!<br><span style="font-size:14px;color:#fff;font-weight:normal">Новый босс ждет тебя!</span></div>';btn.innerText='ДАЛЕЕ';btn.onclick=function(){if(modal)modal.style.display='none';renderAll()}}else{res.innerHTML='<span style="color:#2ecc71;font-size:18px;font-weight:bold">ПОБЕДА! +'+b.rewardGold+' 💰</span>';btn.innerText='ЕЩЕ ЗАЕЗД';btn.onclick=function(){startBossBattleLogic()}}}else{res.innerHTML='<span style="color:#e74c3c;font-size:18px;font-weight:bold">ПОРАЖЕНИЕ!</span>';btn.innerText='РЕВАНШ';btn.onclick=function(){startBossBattleLogic()}}btn.style.display='block';save();updateUI();renderAll()},1500)}
-function sellCurrentCar() { const modal = document.getElementById('sell-modal'); const content = document.getElementById('sell-content'); const error = document.getElementById('sell-error'); const success = document.getElementById('sell-success'); modal.style.display = 'flex'; content.style.display = 'none'; error.style.display = 'none'; success.style.display = 'none'; if (player.ownedCars.length <= 1) { error.style.display = 'block'; } else { content.style.display = 'block'; const c = carsData[player.currentCarId]; const price = Math.floor(c.price * 0.7); document.getElementById('sell-text').innerText = "Продать " + c.name + "?"; document.getElementById('sell-price-display').innerText = price + (c.isGold ? " 💰" : " $"); } }
-function confirmSale() { const id = player.currentCarId; const c = carsData[id]; const price = Math.floor(c.price * 0.7); if (c.isGold) player.gold += price; else player.money += price; player.ownedCars = player.ownedCars.filter(car => car !== id); delete player.carStats[id]; player.currentCarId = player.ownedCars[0]; save(); updateUI(); renderAll(); document.getElementById('sell-content').style.display = 'none'; document.getElementById('sell-success').style.display = 'block'; }
+function sellCurrentCar() { const modal = document.getElementById('sell-modal'); const content = document.getElementById('sell-content'); const error = document.getElementById('sell-error'); const success = document.getElementById('sell-success'); modal.style.display = 'flex'; content.style.display = 'none'; error.style.display = 'none'; success.style.display = 'none'; if (player.ownedCars.length <= 1) { error.style.display = 'block'; } else { content.style.display = 'block'; const carId = player.currentCarId; const c = carsData[carId]; let finalMoney = Math.floor(c.price * 0.7); let finalGold = 0; if (player.carStats && player.carStats[carId] && player.carStats[carId].parts) { const partsOwned = player.carStats[carId].parts; allParts.forEach(p => { const curLvl = partsOwned[p.id] || 0; if (curLvl > 0) { let totalSpentOnPart = 0; for (let i = 1; i <= curLvl; i++) { totalSpentOnPart += p.basePrice * c.priceMult * i; } let refund = Math.floor(totalSpentOnPart * 0.5); if (p.isGold) { finalGold += refund; } else { finalMoney += refund; } } }); } document.getElementById('sell-text').innerText = "Продать " + c.name + "?"; let priceDisplay = finalMoney.toLocaleString() + " $"; if (finalGold > 0) { priceDisplay += " + " + finalGold.toLocaleString() + " 💰"; } document.getElementById('sell-price-display').innerText = priceDisplay; window.currentSellPrice = finalMoney; window.currentSellGold = finalGold; } }
+function confirmSale() { const id = player.currentCarId; const c = carsData[id]; const finalMoney = window.currentSellPrice || Math.floor(c.price * 0.7); const finalGold = window.currentSellGold || 0; if (c.isGold) { player.gold += finalMoney + finalGold; } else { player.money += finalMoney; player.gold += finalGold; } player.ownedCars = player.ownedCars.filter(car => car !== id); if (player.carStats[id]) { delete player.carStats[id]; } player.currentCarId = player.ownedCars[0]; save(); updateUI(); renderAll(); document.getElementById('sell-content').style.display = 'none'; document.getElementById('sell-success').style.display = 'block'; }
 function closeSellModal() { document.getElementById('sell-modal').style.display = 'none'; document.getElementById('sell-content').style.display = 'block'; document.getElementById('sell-success').style.display = 'none'; showScreen('garage'); }  
 
 function previewWheels(wheelId){window.tempWheelId=wheelId;if(typeof playSfx==='function')playSfx('click');const f=document.getElementById('wheel-front'),b=document.getElementById('wheel-back');if(f&&b){if(wheelId==='stock'){f.style.display=b.style.display='none';}else{f.style.display=b.style.display='block';const url="url('images/"+wheelId+".png')",size=f.offsetWidth+"px";f.style.backgroundImage=b.style.backgroundImage=url;f.style.height=b.style.height=size;f.style.borderRadius=b.style.borderRadius='50%';f.style.backgroundSize=b.style.backgroundSize='90%';f.style.backgroundRepeat=b.style.backgroundRepeat='no-repeat';f.style.backgroundPosition=b.style.backgroundPosition='center';f.style.backgroundColor=b.style.backgroundColor='#111';f.style.border=b.style.border='none';f.style.boxShadow=b.style.boxShadow='0 0 10px rgba(0,0,0,0.8)';}}renderAll();}
@@ -928,10 +1020,18 @@ function applyWheels(container, carId) { const carData = carsData[carId]; const 
             }
 
             // Обновляем цифры в шапке напрямую
-            const mDisplay = document.getElementById('money-display');
-            const gDisplay = document.getElementById('gold-display');
-            if (mDisplay) mDisplay.innerText = player.money;
-            if (gDisplay) gDisplay.innerText = player.gold;
+            if (document.getElementById('moneyText')) {
+                    document.getElementById('moneyText').innerText = player.money.toLocaleString();
+                }
+                if (document.getElementById('goldText')) {
+                    document.getElementById('goldText').innerText = player.gold.toLocaleString();
+                }
+                if (document.getElementById('fuelText')) {
+                    document.getElementById('fuelText').innerText = Math.floor(player.fuel);
+                }
+                if (document.getElementById('lvlText')) {
+                    document.getElementById('lvlText').innerText = player.lvl;
+                }
     
             if (typeof save === "function") save();
             if (typeof updateFuelUI === "function") updateFuelUI();
@@ -966,6 +1066,35 @@ function applyWheels(container, carId) { const carData = carsData[carId]; const 
         <button onclick="document.getElementById('fuel-shop-modal').style.display='none'" style="background:none; border:none; color:#555; cursor:pointer; margin-top:20px; text-decoration: underline; font-size: 12px; text-transform: uppercase;">Вернуться в гараж</button>
     </div>
 </div>
+
+<div id="exchange-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center;">
+    <div style="background: #222; padding: 30px; border: 2px solid #f00; border-radius: 15px; width: 400px; box-shadow: 0 0 20px rgba(255,0,0,0.3);">
+        <h2 style="color: #fff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">Обмен Валюты</h2>
+        <div style="font-size: 14px; color: #888; margin-bottom: 20px;">Выгодный курс для гонщиков</div>
+        
+        <div style="background: #111; padding: 15px; border-radius: 10px; border: 1px solid #333; margin-bottom: 20px; display: flex; justify-content: space-around;">
+            <div style="text-align: center;">
+                <div style="color: #888; font-size: 12px; text-transform: uppercase;">Твои баксы</div>
+                <div id="current-bucks-display" style="color: #eee; font-weight: bold; font-size: 18px;">0$</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="color: #888; font-size: 12px; text-transform: uppercase;">Твоё золото</div>
+                <div id="current-gold-display" style="color: #f1c40f; font-weight: bold; font-size: 18px;">0</div>
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Кнопка обмена в стиле btn-action -->
+            <button class="btn-action" onclick="exchangeMoneyToGold()" style="background: #f00; color: #fff; font-weight: bold; border: none; padding: 15px; border-radius: 5px; cursor: pointer; text-transform: uppercase;">
+                Обменять 50.000$ на 10 золота
+            </button>
+        </div>
+
+        <button onclick="document.getElementById('exchange-modal').style.display='none'" style="background:none; border:none; color:#555; cursor:pointer; margin-top:20px; text-decoration: underline; font-size: 12px; text-transform: uppercase; width: 100%;">Вернуться в гараж</button>
+    </div>
+</div>
+
+
 
 <div id="sell-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 5000; justify-content: center; align-items: center;">
     <div style="background: #1a1a1a; padding: 25px; border: 2px dashed #c0392b; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 0 20px rgba(192, 57, 43, 0.4);">
