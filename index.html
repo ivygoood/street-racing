@@ -1,9 +1,19 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Street Racing</title>
+    <title>Уличные Гонки: Возвращение</title>
+    <script src="https://yandex.ru/games/sdk/v2"></script>
     <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Это запретит браузеру крутить страницу игры */
+            position: fixed;  /* Это намертво привяжет игру к экрану */
+        }
+    
         body { background: #111; color: #eee; font-family: 'Arial', sans-serif; margin: 0; text-align: center; }
         .header { background: #222; padding: 15px; border-bottom: 3px solid #f00; display: flex; justify-content: center; gap: 20px; font-size: 14px; font-weight: bold; }
         .money { color: #2ecc71; } .fuel { color: #f1c40f; } .lvl { color: #3498db; }
@@ -202,6 +212,56 @@
             font-size: 24px;
         }
 
+        #market-items {
+            max-height: 75vh; /* Ограничивает высоту списка машин, чтобы он не улетал под экран */
+            overflow-y: auto;  /* Включает вертикальную прокрутку внутри автосалона */
+            overscroll-behavior-y: contain; /* Запрещает прокрутке выходить в браузер */
+        }
+
+                /* 1. Задаем ширину полосы прокрутки */
+        #market-items::-webkit-scrollbar {
+            width: 8px; /* Делаем её потоньше и аккуратнее */
+        }
+
+        /* 2. Стиль дорожки, по которой двигается ползунок (фон) */
+        #market-items::-webkit-scrollbar-track {
+            background: #1a1a1a; /* Темно-серый или почти черный фон под цвет темы */
+            border-radius: 4px;  /* Слегка скругляем края */
+        }
+
+        /* 3. Стиль самого бегунка, за который можно тянуть */
+        #market-items::-webkit-scrollbar-thumb {
+            background: #444444; /* Серый цвет самого ползунка */
+            border-radius: 4px;  /* Скругляем ползунок */
+        }
+
+        /* 4. Меняем цвет ползунка, когда на него наводят мышкой */
+        #market-items::-webkit-scrollbar-thumb:hover {
+            background: #e74c3c; /* Можно сделать красным под цвет твоей активной кнопки «КУПИТЬ» */
+        }
+
+        #race-enemies {
+            max-height: 82vh; /* Увеличили доступную высоту */
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior-y: contain;
+            padding-bottom: 20px; /* Уменьшили лишний отступ снизу */
+        }
+
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+    
+            /* Новые строчки против перетаскивания картинок и ссылок: */
+            -webkit-user-drag: none; 
+            user-drag: none;
+            outline: none; /* Убирает синюю рамку вокруг кнопок при клике */
+        }
+
 
     </style>
 </head>
@@ -230,6 +290,90 @@
             <div id="pre-race-result" style="font-size: 24px; margin: 15px 0; font-weight: bold; min-height: 35px;"></div>
             <button class="btn-action" id="confirm-race-btn">УЧАСТВОВАТЬ!</button>
             <button onclick="closeRace()" style="background:none; border:none; color:#888; cursor:pointer; margin-top:10px; text-decoration: underline;">Назад</button>
+        </div>
+    </div>
+
+    <div id="fuel-shop-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center;">
+        <div style="background: #222; padding: 30px; border: 2px solid #f00; border-radius: 15px; width: 400px; box-shadow: 0 0 20px rgba(255,0,0,0.2);">
+            <h2 style="color: #fff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">АЗС "Красное Пламя"</h2>
+            <div style="font-size: 14px; color: #888; margin-bottom: 20px;">Заправь своего зверя</div>
+            <div id="fuel-message" style="height: 20px; color: #ff4444; font-size: 14px; text-align: center; margin-bottom: 10px; font-weight: bold;"></div>
+    
+            <div style="background: #111; padding: 15px; border-radius: 10px; border: 1px solid #333; margin-bottom: 10px;">
+                <span style="color: #eee;">Бензин в баке:</span> 
+                <span id="fuel-now" style="color: #f1c40f; font-weight: bold; font-size: 20px;">0</span> 
+                <span style="color: #555;">/ <span id="fuel-max-display">75</span></span>
+            </div>
+
+            <!-- СЮДА БУДУТ ПИСАТЬСЯ ОШИБКИ -->
+            <div id="fuel-message" style="height: 30px; color: #ff4444; font-size: 18px; text-align: center; margin-bottom: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);"></div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn-action" onclick="buyFuel(5, 500)">+5 ЛИТРОВ — 500$</button>
+                <button class="btn-action" onclick="buyFuel(15, 1200)">+15 ЛИТРОВ — 1200$</button>
+                <button id="ad-fuel-btn" class="btn-action" onclick="showFuelAd()" style="background: #3498db;">+5 ЛИТРОВ (ЗА РЕКЛАМУ)</button>
+                <button class="btn-action" onclick="upgradeTank()" style="background: #f1c40f; color: #000; font-weight: bold; margin-top: 10px;">УВЕЛИЧИТЬ БАК (+15л) — 500 ЗОЛОТА</button>
+            </div>
+
+            <button onclick="document.getElementById('fuel-shop-modal').style.display='none'" style="background:none; border:none; color:#555; cursor:pointer; margin-top:20px; text-decoration: underline; font-size: 12px; text-transform: uppercase;">Вернуться в гараж</button>
+        </div>
+    </div>
+
+
+    <div id="exchange-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center;">
+        <div style="background: #222; padding: 30px; border: 2px solid #f00; border-radius: 15px; width: 400px; box-shadow: 0 0 20px rgba(255,0,0,0.3);">
+            <h2 style="color: #fff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">Обмен Валюты</h2>
+            <div style="font-size: 14px; color: #888; margin-bottom: 20px;">Выгодный курс для гонщиков</div>
+        
+            <div style="background: #111; padding: 15px; border-radius: 10px; border: 1px solid #333; margin-bottom: 20px; display: flex; justify-content: space-around;">
+                <div style="text-align: center;">
+                    <div style="color: #888; font-size: 12px; text-transform: uppercase;">Твои баксы</div>
+                    <div id="current-bucks-display" style="color: #eee; font-weight: bold; font-size: 18px;">0$</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="color: #888; font-size: 12px; text-transform: uppercase;">Твоё золото</div>
+                    <div id="current-gold-display" style="color: #f1c40f; font-weight: bold; font-size: 18px;">0</div>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Кнопка обмена в стиле btn-action -->
+                <button class="btn-action" onclick="exchangeMoneyToGold()" style="background: #f00; color: #fff; font-weight: bold; border: none; padding: 15px; border-radius: 5px; cursor: pointer; text-transform: uppercase;">
+                    Обменять 50.000$ на 10 золота
+                </button>
+            </div>
+
+            <button onclick="document.getElementById('exchange-modal').style.display='none'" style="background:none; border:none; color:#555; cursor:pointer; margin-top:20px; text-decoration: underline; font-size: 12px; text-transform: uppercase; width: 100%;">Вернуться в гараж</button>
+        </div>
+    </div>
+
+
+
+    <div id="sell-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 5000; justify-content: center; align-items: center;">
+        <div style="background: #1a1a1a; padding: 25px; border: 2px dashed #c0392b; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 0 20px rgba(192, 57, 43, 0.4);">
+            <h2 style="color: #c0392b; text-transform: uppercase; margin-bottom: 15px;">Продажа Авто</h2>
+        
+            <!-- 1. Состояние: Вопрос перед продажей -->
+            <div id="sell-content">
+                <p id="sell-text" style="color: #eee;">Продать машину?</p>
+                <div id="sell-price-display" style="font-size: 24px; color: #f1c40f; font-weight: bold; margin: 20px 0;">0 $</div>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button class="btn-action" style="background: #c0392b;" onclick="confirmSale()">ПРОДАТЬ</button>
+                    <button class="btn-action" style="background: #555;" onclick="document.getElementById('sell-modal').style.display='none'">ОТМЕНА</button>
+                </div>
+            </div>
+
+            <!-- 2. Состояние: Ошибка (последняя машина) -->
+            <div id="sell-error" style="display: none;">
+                <p style="color: #eee; margin: 20px 0;">Нельзя продать последнюю машину! <br>Ты же не хочешь ходить пешком?</p>
+                <button class="btn-action" style="background: #555;" onclick="document.getElementById('sell-modal').style.display='none'">ПОНЯТНО</button>
+            </div>
+
+            <!-- 3. Состояние: Успех -->
+            <div id="sell-success" style="display: none;">
+                <p style="color: #2ecc71; font-size: 18px; font-weight: bold; margin: 20px 0;">АВТОМОБИЛЬ ПРОДАН!</p>
+                <button class="btn-action" onclick="closeSellModal()">ОТЛИЧНО</button>
+            </div>
         </div>
     </div>
 
@@ -285,7 +429,7 @@
             <div class="tuning-menu" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
                 <button class="btn-action" onclick="setTuningTab('parts')">ДЕТАЛИ</button>
                 <button class="btn-action" onclick="setTuningTab('color')">ЦВЕТ</button>
-                <button class="btn-action" onclick="setTuningTab('wheels')">ДИСКИ</button>
+                <button class="btn-action" style="display: none;" onclick="setTuningTab('wheels')">ДИСКИ</button>
                 <button class="btn-action" onclick="setTuningTab('other')">ДРУГОЕ</button>
             </div>
             
@@ -351,6 +495,37 @@
     </div>
 
     <script>
+        var ysdk; 
+
+        YaGames.init().then(_sdk => {
+            ysdk = _sdk;
+
+            // ВАЖНО: Добавили получение языка пользователя для прохождения модерации (п. 2.14)
+            var userLang = ysdk.getLang();
+            console.log('Язык пользователя определен через SDK:', userLang);
+
+            // Показываем рекламу ПРИ ВХОДЕ
+            ysdk.adv.showFullscreenAdv({
+                callbacks: {
+                    onOpen: function() {
+                        // ТУТ ВЫКЛЮЧИ ЗВУК (если он есть)
+                        console.log('Реклама открылась, выключаем звук');
+                    },
+                    onClose: function(wasShown) {
+                        // ТУТ ВКЛЮЧИ ЗВУК ОБРАТНО
+                        console.log('Реклама закрылась, играем дальше');
+                    },
+                    onError: function(error) {
+                        // Если реклама не загрузилась, просто играем дальше
+                    }
+                }
+            });
+        });
+
+
+                // Блокируем вызов контекстного меню браузера в игре
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
         const sounds = { click: new Audio('sounds/click.mp3'), engine: new Audio('sounds/engine.mp3') };
         function playSfx(type) { const sfx = sounds[type]; if (sfx) { sfx.currentTime = 0; sfx.play().catch(e => {}); } }
         const carFilter = (hue) => hue == 0 ? "" : `saturate(0.4) hue-rotate(${hue}deg) saturate(2.2) brightness(0.7) contrast(1.3)`;
@@ -363,17 +538,17 @@
         'vaz2114':    { name: 'ВАЗ 2114', hp: 77, price: 1100, minLvl: 3, img: 'images/vaz2114.png', width: '450px', bottom: '30px', priceMult: 1.05, wPos: { fL: 70, bL: 330, t: 122, s: 52 } },
         'priora':     { name: 'Lada Priora', hp: 98, price: 5800, minLvl: 5, img: 'images/priora.png', width: '450px', bottom: '30px', priceMult: 1.1, wPos: { fL: 75, bL: 360, t: 128, s: 55 } },
         'granta':     { name: 'Lada Granta', hp: 106, price: 10500, minLvl: 5, img: 'images/granta.png', width: '450px', bottom: '30px', priceMult: 1.2, wPos: { fL: 65, bL: 310, t: 120, s: 52 } },
-        'focus':      { name: 'Ford Focus', hp: 130, price: 14500, minLvl: 8, img: 'images/focus.png', width: '450px', bottom: '30px', priceMult: 1.3, wPos: { fL: 65, bL: 315, t: 125, s: 55 } },
-        'subaru':     { name: 'Subaru Impreza', hp: 250, price: 300, isGold: true, minLvl: 20, img: 'images/subaru.png', width: '450px', bottom: '30px', priceMult: 4.5, wPos: { fL: 70, bL: 335, t: 130, s: 58 } },
-        'skyline':    { name: 'Nissan Skyline', hp: 250, price: 25000, minLvl: 10, img: 'images/skyline.png', width: '450px', bottom: '30px', priceMult: 1.7, wPos: { fL: 80, bL: 390, t: 135, s: 62 } },
-        'supra':      { name: 'Toyota Supra', hp: 280, price: 30000, minLvl: 12, img: 'images/supra.png', width: '450px', bottom: '30px', priceMult: 1.8, wPos: { fL: 80, bL: 395, t: 135, s: 62 } },
-        'shelby':     { name: 'Shelby GT500KR', hp: 300, price: 600, isGold: true, minLvl: 25, img: 'images/shelby.png', width: '450px', bottom: '30px', priceMult: 3.1, wPos: { fL: 80, bL: 390, t: 132, s: 62 } },
-        'm5':         { name: 'BMW M5 E60', hp: 350, price: 80000, minLvl: 15, img: 'images/m5.png', width: '450px', bottom: '30px', priceMult: 3.1, wPos: { fL: 80, bL: 390, t: 132, s: 62 } },
-        'r8':         { name: 'Audi R8', hp: 450, price: 160000, minLvl: 18, img: 'images/r8.png', width: '450px', bottom: '30px', priceMult: 4, wPos: { fL: 80, bL: 390, t: 132, s: 62 } },
-        'viper':      { name: 'Dodge Viper SRT', hp: 550, price: 1200, isGold: true, minLvl: 30, img: 'images/viper.png', width: '450px', bottom: '30px', priceMult: 4, wPos: { fL: 80, bL: 390, t: 132, s: 62 } },
-        'porsche911': { name: 'Porsche 911', hp: 550, price: 280000, minLvl: 22, img: 'images/porsche.png', width: '450px', bottom: '30px', priceMult: 4.8, wPos: { fL: 85, bL: 380, t: 138, s: 65 } },
-        'california': { name: 'Ferrari California', hp: 800, price: 400000, minLvl: 27, img: 'images/california.png', width: '450px', bottom: '30px', priceMult: 7, wPos: { fL: 85, bL: 380, t: 138, s: 65 } },
-        'lambo':      { name: 'Lamborghini Aventador', hp: 900, price: 5000, isGold: true, minLvl: 35, img: 'images/lambo.png', width: '450px', bottom: '30px', priceMult: 15, wPos: { fL: 110, bL: 442, t: 98, s: 62 } },
+        'focus':      { name: 'Fort Focus', hp: 130, price: 14500, minLvl: 8, img: 'images/focus.png', width: '450px', bottom: '30px', priceMult: 1.3, wPos: { fL: 65, bL: 315, t: 125, s: 55 } },
+        'subaru':     { name: 'Impreza WRX', hp: 250, price: 300, isGold: true, minLvl: 20, img: 'images/subaru.png', width: '450px', bottom: '30px', priceMult: 4.5, wPos: { fL: 70, bL: 335, t: 130, s: 58 } },
+        'skyline':    { name: 'Nismo Skyline', hp: 250, price: 25000, minLvl: 10, img: 'images/skyline.png', width: '450px', bottom: '30px', priceMult: 1.7, wPos: { fL: 80, bL: 390, t: 135, s: 62 } },
+        'supra':      { name: 'Totoya Supra', hp: 280, price: 30000, minLvl: 12, img: 'images/supra.png', width: '450px', bottom: '30px', priceMult: 1.8, wPos: { fL: 80, bL: 395, t: 135, s: 62 } },
+        'shelby':     { name: 'Sheldy GT500KR', hp: 300, price: 600, isGold: true, minLvl: 25, img: 'images/shelby.png', width: '450px', bottom: '30px', priceMult: 3.1, wPos: { fL: 80, bL: 390, t: 132, s: 62 } },
+        'm5':         { name: 'BWM M5 E60', hp: 350, price: 80000, minLvl: 15, img: 'images/m5.png', width: '450px', bottom: '30px', priceMult: 3.1, wPos: { fL: 80, bL: 390, t: 132, s: 62 } },
+        'r8':         { name: 'Aydi R8', hp: 450, price: 160000, minLvl: 18, img: 'images/r8.png', width: '450px', bottom: '30px', priceMult: 4, wPos: { fL: 80, bL: 390, t: 132, s: 62 } },
+        'viper':      { name: 'Dodje Viper SRT', hp: 550, price: 1200, isGold: true, minLvl: 30, img: 'images/viper.png', width: '450px', bottom: '30px', priceMult: 4, wPos: { fL: 80, bL: 390, t: 132, s: 62 } },
+        'porsche911': { name: 'Porshe 911', hp: 550, price: 280000, minLvl: 22, img: 'images/porsche.png', width: '450px', bottom: '30px', priceMult: 4.8, wPos: { fL: 85, bL: 380, t: 138, s: 65 } },
+        'california': { name: 'Fiero California', hp: 800, price: 400000, minLvl: 27, img: 'images/california.png', width: '450px', bottom: '30px', priceMult: 7, wPos: { fL: 85, bL: 380, t: 138, s: 65 } },
+        'lambo':      { name: 'Lambo Aventador', hp: 900, price: 5000, isGold: true, minLvl: 35, img: 'images/lambo.png', width: '450px', bottom: '30px', priceMult: 15, wPos: { fL: 110, bL: 442, t: 98, s: 62 } },
         };
 
         const allParts = [
@@ -406,10 +581,10 @@
         ];
 
         const bossesDB = [
-            { id: 0, carName: "Subaru Impreza", hp: 400, img: "images/subaru.png", entryFee: 10, reward: 20 },
-            { id: 1, carName: "Shelby GT500KR", hp: 600, img: "images/shelby.png", entryFee: 50, reward: 150 },
-            { id: 2, carName: "Dodge Viper SRT", hp: 850, img: "images/viper.png", entryFee: 200, reward: 500 },
-            { id: 3, carName: "Lamborghini Aventador", hp: 1200, img: "images/lambo.png", entryFee: 500, reward: 1000 }
+            { id: 0, carName: "Impreza WRX", hp: 400, img: "images/subaru.png", entryFee: 10, reward: 20 },
+            { id: 1, carName: "Sheldy GT500KR", hp: 600, img: "images/shelby.png", entryFee: 50, reward: 150 },
+            { id: 2, carName: "Dodje Viper SRT", hp: 850, img: "images/viper.png", entryFee: 200, reward: 500 },
+            { id: 3, carName: "Lambo Aventador", hp: 1200, img: "images/lambo.png", entryFee: 500, reward: 1000 }
         ];
 
         // Вызывать при старте страницы
@@ -704,7 +879,7 @@
                             <p style="color:#f1c40f">Уровень: ${curLvl}/${maxLvl}</p>
                             <p>+${p.baseHp} л.с. / ур.</p>
                             <p style="font-weight:bold; color:${p.isGold ? '#f1c40f' : '#fff'}">${isMax ? 'МАКСИМУМ' : 'Цена: ' + priceTag}</p>
-                            <button class="btn-action" ${isMax ? 'disabled' : ''} onclick="buyPart('${p.id}', ${nextPrice})">${isMax ? 'ПРОКАЧАНО' : 'КУПИТЬ'}</button>
+                           <button class="btn-action" ${isMax ? 'disabled' : ''} onclick="buyPart('${p.id}', ${nextPrice}, this)">${isMax ? 'ПРОКАЧАНО' : 'КУПИТЬ'}</button>
                         </div>`;
                     };
 
@@ -811,7 +986,7 @@
                     const owned = player.ownedCars.includes(id);
                     const lvlLock = player.lvl < c.minLvl;
                     const priceHtml = c.isGold ? `<span style="color:#f1c40f">${c.price} 💰</span>` : `${c.price} $`;
-                    marketDiv.innerHTML += `<div class="card"><div class="img-wrapper"><img src="${c.img}" style="width:${c.width || '90%'}"></div><h3>${c.name}</h3><p>База: ${c.hp} л.с.</p><p style="font-weight:bold">${lvlLock ? `<span style="color:#e74c3c">НУЖЕН ${c.minLvl} УР.</span>` : priceHtml}</p><button class="btn-action" ${owned || lvlLock ? 'disabled' : ''} onclick="buyCar('${id}')">${owned ? 'КУПЛЕНО' : 'КУПИТЬ'}</button></div>`;
+                    marketDiv.innerHTML += `<div class="card"><div class="img-wrapper"><img src="${c.img}" style="width:${c.width || '90%'}"></div><h3>${c.name}</h3><p>База: ${c.hp} л.с.</p><p style="font-weight:bold">${lvlLock ? `<span style="color:#e74c3c">НУЖЕН ${c.minLvl} УР.</span>` : priceHtml}</p><button class="btn-action" ${owned || lvlLock ? 'disabled' : ''} onclick="buyCar('${id}', this)">${owned ? 'КУПЛЕНО' : 'КУПИТЬ'}</button></div>`;
                 });
 
         }
@@ -830,21 +1005,22 @@
                             </div>`;
                     });
 
-                    // Блок Босса
+                                  // Блок Босса с уменьшенными отступами
                     const b = bossesDB[player.bossLvl || 0]; 
                     if (b) {
                         raceDiv.innerHTML += 
-                            '<div style="width: 100%; margin-top: 30px; border-top: 2px solid #f1c40f; padding-top: 20px; display: inline-block;">' +
-                                '<h2 style="color: #f1c40f;">ЗОЛОТОЙ ТУРНИР</h2>' +
-                                '<div class="card" style="border: 2px solid #f1c40f; margin: 10px auto; width: 300px;">' +
-                                    '<div class="img-wrapper"><img src="' + b.img + '"></div>' +
-                                    '<h3>' + b.carName + '</h3>' +
-                                    '<p>' + b.hp + ' л.с.</p>' +
-                                    '<p style="color:#f1c40f">ПОБЕД: ' + (player.bossWins || 0) + ' / 10</p>' +
-                                    '<button class="btn-action" style="background:#f1c40f; color:#000;" onclick="openBossRace()">БРОСИТЬ ВЫЗОВ</button>' +
+                            '<div style="width: 100%; margin-top: 10px; border-top: 2px solid #f1c40f; padding-top: 10px; display: inline-block;">' +
+                                '<h2 style="color: #f1c40f; margin: 5px 0;">ЗОЛОТОЙ ТУРНИР</h2>' +
+                                '<div class="card" style="border: 2px solid #f1c40f; margin: 5px auto; width: 280px;">' +
+                                    '<div class="img-wrapper" style="max-height: 90px;"><img src="' + b.img + '" style="max-height: 80px; object-fit: contain;"></div>' +
+                                    '<h3 style="margin: 5px 0;">' + b.carName + '</h3>' +
+                                    '<p style="margin: 2px 0;">' + b.hp + ' л.с.</p>' +
+                                    '<p style="color:#f1c40f; margin: 2px 0; font-size: 14px;">ПОБЕД: ' + (player.bossWins || 0) + ' / 10</p>' +
+                                    '<button class="btn-action" style="background:#f1c40f; color:#000; margin-top: 5px;" onclick="openBossRace()">БРОСИТЬ ВЫЗОВ</button>' +
                                 '</div>' +
                             '</div>';
                     }
+
                 }
         
 
@@ -859,9 +1035,9 @@
 
         function nextCar() { playSfx('click'); let idx = player.ownedCars.indexOf(player.currentCarId); idx = (idx + 1) % player.ownedCars.length; player.currentCarId = player.ownedCars[idx]; save(); updateUI(); }
         function prevCar() { playSfx('click'); let idx = player.ownedCars.indexOf(player.currentCarId); idx = (idx - 1 + player.ownedCars.length) % player.ownedCars.length; player.currentCarId = player.ownedCars[idx]; save(); updateUI(); }
-        function buyPart(pId, price) { if (typeof playSfx === 'function') playSfx('click'); const p = allParts.find(item => item.id === pId); const carId = player.currentCarId; if (!player.carStats[carId]) player.carStats[carId] = { parts: {}, color: 0 }; if (!player.carStats[carId].parts) player.carStats[carId].parts = {}; const curLvl = player.carStats[carId].parts[pId] || 0; const maxLvl = pId === 'nos_system' ? 1 : 3; if (curLvl >= maxLvl) return; if (p.isGold) { if (player.gold >= price) { player.gold -= price; player.carStats[carId].parts[pId] = curLvl + 1; save(); updateUI(); renderAll(); } else { alert('Нужно больше золота 💰!'); } } else { if (player.money >= price) { player.money -= price; player.carStats[carId].parts[pId] = curLvl + 1; player.stats.spent += price; save(); updateUI(); renderAll(); } else { alert('Недостаточно денег!'); } } }
+        function buyPart(pId, price, btn) { if (typeof playSfx === 'function') playSfx('click'); const p = allParts.find(i => i.id === pId), cId = player.currentCarId; const cur = player.carStats[cId]?.parts?.[pId] || 0; if (cur >= (pId === 'nos_system' ? 1 : 3)) return; const isGold = !!p.isGold; const hasMoney = isGold ? player.gold >= price : player.money >= price; if (hasMoney) { if (isGold) player.gold -= price; else { player.money -= price; player.stats.spent += price; } if (!player.carStats[cId]) player.carStats[cId] = { parts: {}, color: 0 }; player.carStats[cId].parts[pId] = cur + 1; save(); updateUI(); renderAll(); } else { if (btn) { const oldT = btn.innerText; btn.innerText = isGold ? "МАЛО ЗОЛОТА!" : "НЕТ ДЕНЕГ!"; btn.style.color = "#ffffff"; btn.style.fontWeight = "bold"; setTimeout(() => { btn.innerText = oldT; btn.style.color = ""; }, 2000); } } }
         function setTuningTab(tab) { if (typeof playSfx === 'function') playSfx('click'); currentTab = tab; renderAll(); }
-        function buyCar(id) { if (typeof playSfx === 'function') playSfx('click'); const c = carsData[id]; if (player.ownedCars.includes(id)) return; if (c.isGold) { if (player.gold >= c.price) { player.gold -= c.price; player.ownedCars.push(id); if (!player.carStats[id]) player.carStats[id] = { parts: {}, color: 0 }; save(); updateUI(); renderAll(); showScreen('garage'); } else { alert('Нужно больше золота 💰!'); } } else { if (player.money >= c.price) { player.money -= c.price; player.stats.spent += c.price; player.ownedCars.push(id); if (!player.carStats[id]) player.carStats[id] = { parts: {}, color: 0 }; save(); updateUI(); renderAll(); showScreen('garage'); } else { alert('Недостаточно денег!'); } } }
+        function buyCar(id, btn) { if (typeof playSfx === 'function') playSfx('click'); const c = carsData[id]; if (player.ownedCars.includes(id)) return; const isGold = !!c.isGold, price = c.price; const hasMoney = isGold ? player.gold >= price : player.money >= price; if (hasMoney) { if (isGold) player.gold -= price; else { player.money -= price; player.stats.spent += price; } player.ownedCars.push(id); if (!player.carStats[id]) player.carStats[id] = { parts: {}, color: 0 }; save(); updateUI(); renderAll(); showScreen('garage'); } else { if (btn) { const oldT = btn.innerText; btn.innerText = isGold ? "НУЖНО ЗОЛОТО!" : "НЕТ ДЕНЕГ!"; btn.style.color = "#ffffff"; btn.style.fontWeight = "bold"; setTimeout(() => { btn.innerText = oldT; btn.style.color = ""; }, 2000); } } }
         function openRace(idx){if(typeof playSfx==='function')playSfx('click');const btn=document.getElementById('confirm-race-btn');btn.classList.add('active-sheen');btn.innerText="УЧАСТВОВАТЬ!";activeIdx=idx;const enemy=currentEnemies[idx],myCar=carsData[player.currentCarId],myHp=calculateCarHp(player.currentCarId);document.getElementById('race-modal').style.display='flex';document.getElementById('pre-race-result').innerText='';btn.style.display='block';btn.onclick=function(){startNormalRace()};document.getElementById('my-race-card').innerHTML='<div class="race-card-modal"><div class="img-wrapper"><img id="my-race-img" src="'+myCar.img+'" style="width: 100%"></div><h3>Твоя тачка</h3><p>'+myHp+' л.с.</p></div>';document.getElementById('enemy-race-card').innerHTML='<div class="race-card-modal"><div class="img-wrapper"><img id="enemy-race-img" src="'+enemy.img+'" style="width: 100%"></div><h3>'+enemy.name+'</h3><p>'+enemy.hp+' л.с.</p></div>';const myHue=player.carStats[player.currentCarId]?.color||0,myImg=document.getElementById('my-race-img');if(myImg)myImg.style.filter=myHue===0?"":"hue-rotate("+myHue+"deg)"}
         
         function startNormalRace(){const btn=document.getElementById('confirm-race-btn'),res=document.getElementById('pre-race-result');if(player.fuel<=0){res.innerHTML='<span style="color:#e74c3c;font-weight:bold;animation:shake 0.3s">БЕНЗИН НА НУЛЕ! ⛽</span>';btn.style.background='#c0392b';setTimeout(()=>{btn.style.background='';res.innerText=""},1500);return}btn.classList.add('active-sheen');playSfx('engine');const myImg=document.getElementById('my-race-img'),enImg=document.getElementById('enemy-race-img');myImg.classList.add('race-shake');enImg.classList.add('race-shake');btn.style.display='none';setTimeout(()=>{myImg.classList.remove('race-shake');enImg.classList.remove('race-shake');player.fuel--;player.stats.races++;const enemy=currentEnemies[activeIdx],myHp=calculateCarHp(player.currentCarId),winChance=myHp>enemy.hp?0.85:Math.pow(myHp/enemy.hp,3),win=Math.random()<winChance;if(win){player.money+=enemy.prize;player.xp+=5;player.stats.wins++;player.stats.earned+=enemy.prize;res.innerText="ПОБЕДА! +"+enemy.prize+"$";res.style.color="lime"}else{player.stats.losses++;res.innerText="ПРОИГРЫШ!";res.style.color="red"}let xpNeeded=player.lvl*200;if(player.xp>=xpNeeded){player.xp=0;player.lvl++;player.money+=300;player.stats.earned+=300;res.innerHTML='<div style="color:#f1c40f;font-weight:bold;animation:pulse 1s infinite">НОВЫЙ УРОВЕНЬ! +500$</div>'}btn.innerText="ЕЩЁ РАЗ?";btn.style.display='block';btn.onclick=function(){startNormalRace()};save();updateUI()},2000)}
@@ -912,10 +1088,10 @@
         };
 
         // 2. Функция покупки
-        function updateFuelUI() { document.getElementById('fuel-now').innerText = player.fuel; document.getElementById('fuel-max-display').innerText = player.maxFuel || 75; }
-        function buyFuel(amount, cost) { let max = player.maxFuel || 75; if (player.money >= cost) { if (player.fuel >= max) { alert("Бак уже полон!"); return; } player.money -= cost; player.fuel = Math.min(max, player.fuel + amount); saveAndRefresh(); } else { alert("Недостаточно денег!"); } }
-        function showFuelAd() { let max = player.maxFuel || 75; if (player.fuel >= max) { alert("Бак полон!"); return; } if (confirm("Посмотреть рекламу (+5 литров)?")) { player.fuel = Math.min(max, player.fuel + 5); saveAndRefresh(); alert("Готово! +5 литров."); } }
-        function upgradeTank() { let upgradeCost = 500; if (player.gold >= upgradeCost) { player.gold -= upgradeCost; player.maxFuel = (player.maxFuel || 75) + 15; saveAndRefresh(); alert("Емкость бака увеличена до " + player.maxFuel + "л!"); } else { alert("Недостаточно золота!"); } }
+        function showFuelMsg(t, e = !0) { let m = document.getElementById('fuel-message'); m.style.color = e ? "#ff4444" : "#2ecc71"; m.innerText = t; setTimeout(() => { m.innerText = ""; }, 4000); }
+        function showFuelAd() { let m = player.maxFuel || 75; if (player.fuel >= m) return showFuelMsg("Бак уже полон!"); if (typeof ysdk !== 'undefined') ysdk.adv.showRewardedVideo({ callbacks: { onRewarded: () => { player.fuel = Math.min(m, player.fuel + 5); saveAndRefresh(); showFuelMsg("Бензин залит!", !1); }, onError: () => showFuelMsg("Ошибка рекламы") } }); }        function updateFuelUI() { document.getElementById('fuel-now').innerText = player.fuel; document.getElementById('fuel-max-display').innerText = player.maxFuel || 75; }
+        function buyFuel(a, c) { let m = player.maxFuel || 75; if (player.fuel >= m) return showFuelMsg("Бак уже полон!"); if (player.money >= c) { player.money -= c; player.fuel = Math.min(m, player.fuel + a); saveAndRefresh(); showFuelMsg("Заправлено!", !1); } else showFuelMsg("Недостаточно денег!"); }        
+        function upgradeTank() { let c = 500; if (player.gold >= c) { player.gold -= c; player.maxFuel = (player.maxFuel || 75) + 15; saveAndRefresh(); showFuelMsg("Бак увеличен до " + player.maxFuel + "л!", !1); } else showFuelMsg("Недостаточно золота!"); }
         function saveAndRefresh() { if(typeof save === "function") save(); else if(typeof saveGame === "function") saveGame(); if(typeof updateUI === "function") updateUI(); updateFuelUI(); }
 
         function openBossRace(){const b=bossesDB[player.bossLvl||0],modal=document.getElementById('race-modal'),content=modal.querySelector('.modal-content')||modal.firstElementChild;if(content){content.style.maxWidth='800px';content.style.padding='15px 20px';const cardsWrap=content.querySelector('.race-cards-wrap')||content.querySelector('div[style*="display"]');if(cardsWrap){cardsWrap.style.display='flex';cardsWrap.style.justifyContent='center';cardsWrap.style.alignItems='center';cardsWrap.style.gap='20px';cardsWrap.style.width='100%';cardsWrap.style.margin='0 auto'}}modal.style.display='flex';document.getElementById('pre-race-result').innerText='';const myCar=carsData[player.currentCarId],myHp=calculateCarHp(player.currentCarId),myHue=player.carStats[player.currentCarId]?.color||0;document.getElementById('my-race-card').innerHTML=`<div class="race-card-modal" style="margin:0; flex: 0 1 auto;"><div class="img-wrapper"><img id="my-race-img" src="${myCar.img}" style="width:100%;${myHue?`filter:hue-rotate(${myHue}deg)`:''}"></div><h3>Твоя тачка</h3><p>${myHp} л.с.</p></div>`;document.getElementById('enemy-race-card').innerHTML=`<div class="race-card-modal" style="border:1px solid #f1c40f; margin:0; flex: 0 1 auto;"><div class="img-wrapper"><img id="enemy-race-img" src="${b.img}" style="width:100%"></div><h3>${b.carName}</h3><p style="margin-bottom:5px">${b.hp} л.с.</p><div style="line-height:1.2"><p style="color:#f1c40f;font-weight:bold;margin:0;font-size:14px;text-transform:uppercase">БОСС</p><p style="font-size:11px;color:#aaa;margin:0">ПОБЕД: ${(player.bossWins||0)} / 10</p></div></div>`;window.currentEnemy={name:b.carName,hp:b.hp,isBoss:true,rewardGold:b.reward,fee:b.entryFee};const cBtn=document.getElementById('confirm-race-btn');cBtn.classList.add('active-sheen');cBtn.style.display='block';cBtn.innerText='УЧАСТВОВАТЬ!';document.getElementById('pre-race-result').innerHTML=`<p style="font-size:12px;color:#888;margin:0">Стоимость заезда: ${b.entryFee} 💰</p>`;cBtn.onclick=function(){startBossBattleLogic()}}
@@ -1042,84 +1218,3 @@ function applyWheels(container, carId) { const carData = carsData[carId]; const 
     </script>
 </body>
 </html>
-
-<div id="fuel-shop-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center;">
-    <div style="background: #222; padding: 30px; border: 2px solid #f00; border-radius: 15px; width: 400px; box-shadow: 0 0 20px rgba(255,0,0,0.2);">
-        <h2 style="color: #fff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">АЗС "Красное Пламя"</h2>
-        <div style="font-size: 14px; color: #888; margin-bottom: 20px;">Заправь своего зверя</div>
-        
-        <div style="background: #111; padding: 15px; border-radius: 10px; border: 1px solid #333; margin-bottom: 20px;">
-            <span style="color: #eee;">Бензин в баке:</span> 
-            <span id="fuel-now" style="color: #f1c40f; font-weight: bold; font-size: 20px;">0</span> 
-            <span style="color: #555;">/ <span id="fuel-max-display">75</span></span>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-            <button class="btn-action" onclick="buyFuel(5, 500)">+5 ЛИТРОВ — 500$</button>
-            <button class="btn-action" onclick="buyFuel(15, 1200)">+15 ЛИТРОВ — 1200$</button>
-            <button id="ad-fuel-btn" class="btn-action" onclick="showFuelAd()" style="background: #3498db;">+5 ЛИТРОВ (ЗА РЕКЛАМУ)</button>
-            
-            <!-- Новая кнопка -->
-            <button class="btn-action" onclick="upgradeTank()" style="background: #f1c40f; color: #000; font-weight: bold; margin-top: 10px;">УВЕЛИЧИТЬ БАК (+15л) — 500 ЗОЛОТА</button>
-        </div>
-
-        <button onclick="document.getElementById('fuel-shop-modal').style.display='none'" style="background:none; border:none; color:#555; cursor:pointer; margin-top:20px; text-decoration: underline; font-size: 12px; text-transform: uppercase;">Вернуться в гараж</button>
-    </div>
-</div>
-
-<div id="exchange-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center;">
-    <div style="background: #222; padding: 30px; border: 2px solid #f00; border-radius: 15px; width: 400px; box-shadow: 0 0 20px rgba(255,0,0,0.3);">
-        <h2 style="color: #fff; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px;">Обмен Валюты</h2>
-        <div style="font-size: 14px; color: #888; margin-bottom: 20px;">Выгодный курс для гонщиков</div>
-        
-        <div style="background: #111; padding: 15px; border-radius: 10px; border: 1px solid #333; margin-bottom: 20px; display: flex; justify-content: space-around;">
-            <div style="text-align: center;">
-                <div style="color: #888; font-size: 12px; text-transform: uppercase;">Твои баксы</div>
-                <div id="current-bucks-display" style="color: #eee; font-weight: bold; font-size: 18px;">0$</div>
-            </div>
-            <div style="text-align: center;">
-                <div style="color: #888; font-size: 12px; text-transform: uppercase;">Твоё золото</div>
-                <div id="current-gold-display" style="color: #f1c40f; font-weight: bold; font-size: 18px;">0</div>
-            </div>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-            <!-- Кнопка обмена в стиле btn-action -->
-            <button class="btn-action" onclick="exchangeMoneyToGold()" style="background: #f00; color: #fff; font-weight: bold; border: none; padding: 15px; border-radius: 5px; cursor: pointer; text-transform: uppercase;">
-                Обменять 50.000$ на 10 золота
-            </button>
-        </div>
-
-        <button onclick="document.getElementById('exchange-modal').style.display='none'" style="background:none; border:none; color:#555; cursor:pointer; margin-top:20px; text-decoration: underline; font-size: 12px; text-transform: uppercase; width: 100%;">Вернуться в гараж</button>
-    </div>
-</div>
-
-
-
-<div id="sell-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 5000; justify-content: center; align-items: center;">
-    <div style="background: #1a1a1a; padding: 25px; border: 2px dashed #c0392b; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 0 20px rgba(192, 57, 43, 0.4);">
-        <h2 style="color: #c0392b; text-transform: uppercase; margin-bottom: 15px;">Продажа Авто</h2>
-        
-        <!-- 1. Состояние: Вопрос перед продажей -->
-        <div id="sell-content">
-            <p id="sell-text" style="color: #eee;">Продать машину?</p>
-            <div id="sell-price-display" style="font-size: 24px; color: #f1c40f; font-weight: bold; margin: 20px 0;">0 $</div>
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <button class="btn-action" style="background: #c0392b;" onclick="confirmSale()">ПРОДАТЬ</button>
-                <button class="btn-action" style="background: #555;" onclick="document.getElementById('sell-modal').style.display='none'">ОТМЕНА</button>
-            </div>
-        </div>
-
-        <!-- 2. Состояние: Ошибка (последняя машина) -->
-        <div id="sell-error" style="display: none;">
-            <p style="color: #eee; margin: 20px 0;">Нельзя продать последнюю машину! <br>Ты же не хочешь ходить пешком?</p>
-            <button class="btn-action" style="background: #555;" onclick="document.getElementById('sell-modal').style.display='none'">ПОНЯТНО</button>
-        </div>
-
-        <!-- 3. Состояние: Успех -->
-        <div id="sell-success" style="display: none;">
-            <p style="color: #2ecc71; font-size: 18px; font-weight: bold; margin: 20px 0;">АВТОМОБИЛЬ ПРОДАН!</p>
-            <button class="btn-action" onclick="closeSellModal()">ОТЛИЧНО</button>
-        </div>
-    </div>
-</div>
