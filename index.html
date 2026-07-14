@@ -1407,10 +1407,17 @@
 
             // Используем ваш объект player
             if (player.money >= cost) {
+        
+                // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ ЛЕГАЛЬНОГО ОБМЕНА ---
+                window.isGameChangingData = true;
+
                 // 1. Проводим расчеты в объекте игрока
                 player.money -= cost;
                 // Если у вас золото в объекте называется gold, меняем его
                 player.gold = (player.gold || 0) + reward;
+
+                // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+                window.isGameChangingData = false;
 
                 // 2. Используем вашу родную функцию для сохранения и обновления экрана
                 saveAndRefresh();
@@ -1435,6 +1442,7 @@
                 }, 2000);
             }
         }
+
 
         window.startBossRace = function() { const b = bossesDB[player.bossLvl || 0]; if (!b) return; const isEn = (typeof userLang !== 'undefined' && userLang !== 'ru'); if (player.gold < b.entryFee) { alert(isEn ? 'Need more gold 💰!' : 'Нужно больше золота 💰!'); return; } if (player.fuel < 15) { alert(isEn ? 'Need fuel ⛽!' : 'Нужен бензин ⛽!'); return; } player.gold -= b.entryFee; player.fuel -= 5; const myHp = calculateCarHp(player.currentCarId); const chance = myHp / (myHp + b.hp); if (Math.random() < chance) { player.gold += b.reward; player.bossWins++; if (player.bossWins >= 10) { player.bossWins = 0; player.bossLvl++; alert(isEn ? 'BOSS DEFEATED!' : 'БОСС ПОВЕРЖЕН!'); } else { alert(isEn ? 'WIN!' : 'ПОБЕДА!'); } } else { alert(isEn ? 'DEFEAT!' : 'ПОРАЖЕНИЕ!'); } save(); updateUI(); renderAll(); };
 
@@ -2026,9 +2034,90 @@
 
         function nextCar() { playSfx('click'); let idx = player.ownedCars.indexOf(player.currentCarId); idx = (idx + 1) % player.ownedCars.length; player.currentCarId = player.ownedCars[idx]; save(); updateUI(); }
         function prevCar() { playSfx('click'); let idx = player.ownedCars.indexOf(player.currentCarId); idx = (idx - 1 + player.ownedCars.length) % player.ownedCars.length; player.currentCarId = player.ownedCars[idx]; save(); updateUI(); }
-        function buyPart(pId, price, btn) { if (typeof playSfx === 'function') playSfx('click'); const p = allParts.find(i => i.id === pId), cId = player.currentCarId; const cur = player.carStats[cId]?.parts?.[pId] || 0; if (cur >= (pId === 'nos_system' ? 1 : 3)) return; const isGold = !!p.isGold; const hasMoney = isGold ? player.gold >= price : player.money >= price; if (hasMoney) { if (isGold) player.gold -= price; else { player.money -= price; player.stats.spent += price; } if (!player.carStats[cId]) player.carStats[cId] = { parts: {}, color: 0 }; player.carStats[cId].parts[pId] = cur + 1; save(); updateUI(); renderAll(); } else { if (btn) { const oldT = btn.innerText; btn.innerText = isGold ? "МАЛО ЗОЛОТА!" : "НЕТ ДЕНЕГ!"; btn.style.color = "#ffffff"; btn.style.fontWeight = "bold"; setTimeout(() => { btn.innerText = oldT; btn.style.color = ""; }, 2000); } } }
+        function buyPart(pId, price, btn) { 
+            if (typeof playSfx === 'function') playSfx('click'); 
+            const p = allParts.find(i => i.id === pId), cId = player.currentCarId; 
+            const cur = player.carStats[cId]?.parts?.[pId] || 0; 
+            if (cur >= (pId === 'nos_system' ? 1 : 3)) return; 
+            const isGold = !!p.isGold; 
+            const hasMoney = isGold ? player.gold >= price : player.money >= price; 
+    
+            if (hasMoney) { 
+        
+                // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ ЛЕГАЛЬНОЙ ПОКУПКИ ДЕТАЛЕЙ ТЮНИНГА ---
+                window.isGameChangingData = true;
+
+                if (isGold) {
+                    player.gold -= price; 
+                } else { 
+                    player.money -= price; 
+                    player.stats.spent += price; 
+                } 
+                if (!player.carStats[cId]) player.carStats[cId] = { parts: {}, color: 0 }; 
+                player.carStats[cId].parts[pId] = cur + 1; 
+
+                // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+                window.isGameChangingData = false;
+
+                save(); 
+                updateUI(); 
+                renderAll(); 
+            } else { 
+                if (btn) { 
+                    const oldT = btn.innerText; 
+                    btn.innerText = isGold ? "МАЛО ЗОЛОТА!" : "НЕТ ДЕНЕГ!"; 
+                    btn.style.color = "#ffffff"; 
+                    btn.style.fontWeight = "bold"; 
+                    setTimeout(() => { 
+                        btn.innerText = oldT; 
+                        btn.style.color = ""; 
+                    }, 2000); 
+                } 
+            } 
+        }
         function setTuningTab(tab) { if (typeof playSfx === 'function') playSfx('click'); currentTab = tab; renderAll(); }
-        function buyCar(id, btn) { if (typeof playSfx === 'function') playSfx('click'); const c = carsData[id]; if (player.ownedCars.includes(id)) return; const isGold = !!c.isGold, price = c.price; const hasMoney = isGold ? player.gold >= price : player.money >= price; if (hasMoney) { if (isGold) player.gold -= price; else { player.money -= price; player.stats.spent += price; } player.ownedCars.push(id); if (!player.carStats[id]) player.carStats[id] = { parts: {}, color: 0 }; save(); updateUI(); renderAll(); showScreen('garage'); } else { if (btn) { const oldT = btn.innerText; btn.innerText = isGold ? "НУЖНО ЗОЛОТО!" : "НЕТ ДЕНЕГ!"; btn.style.color = "#ffffff"; btn.style.fontWeight = "bold"; setTimeout(() => { btn.innerText = oldT; btn.style.color = ""; }, 2000); } } }
+        function buyCar(id, btn) { 
+            if (typeof playSfx === 'function') playSfx('click'); 
+            const c = carsData[id]; 
+            if (player.ownedCars.includes(id)) return; 
+            const isGold = !!c.isGold, price = c.price; 
+            const hasMoney = isGold ? player.gold >= price : player.money >= price; 
+    
+            if (hasMoney) { 
+        
+                // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ КУПЛИ-ПРОДАЖИ АВТО ---
+                window.isGameChangingData = true;
+
+                if (isGold) {
+                    player.gold -= price; 
+                } else { 
+                    player.money -= price; 
+                    player.stats.spent += price; 
+                } 
+                player.ownedCars.push(id); 
+
+                // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+                window.isGameChangingData = false;
+
+                if (!player.carStats[id]) player.carStats[id] = { parts: {}, color: 0 }; 
+        
+                save(); 
+                updateUI(); 
+                renderAll(); 
+                showScreen('garage'); 
+            } else { 
+                if (btn) { 
+                    const oldT = btn.innerText; 
+                    btn.innerText = isGold ? "НУЖНО ЗОЛОТО!" : "НЕТ ДЕНЕГ!"; 
+                    btn.style.color = "#ffffff"; 
+                    btn.style.fontWeight = "bold"; 
+                    setTimeout(() => { 
+                        btn.innerText = oldT; 
+                        btn.style.color = ""; 
+                    }, 2000); 
+                } 
+            } 
+        }
         function openRace(idx){if(typeof playSfx==='function')playSfx('click');const btn=document.getElementById('confirm-race-btn');btn.classList.add('active-sheen');const isEn=(typeof userLang!=='undefined'&&userLang!=='ru');btn.innerText=isEn?"RACE!":"УЧАСТВОВАТЬ!";activeIdx=idx;const enemy=currentEnemies[idx],myCar=carsData[player.currentCarId],myHp=calculateCarHp(player.currentCarId);document.getElementById('race-modal').style.display='flex';document.getElementById('pre-race-result').innerText='';btn.style.display='block';btn.onclick=function(){startNormalRace()};const textHp=isEn?'hp':'л.с.',textYourRide=isEn?'Your Ride':'Твоя тачка';document.getElementById('my-race-card').innerHTML='<div class="race-card-modal"><div class="img-wrapper"><img id="my-race-img" src="'+myCar.img+'" style="width: 100%"></div><h3>'+textYourRide+'</h3><p>'+myHp+' '+textHp+'</p></div>';document.getElementById('enemy-race-card').innerHTML='<div class="race-card-modal"><div class="img-wrapper"><img id="enemy-race-img" src="'+enemy.img+'" style="width: 100%"></div><h3>'+enemy.name+'</h3><p>'+enemy.hp+' '+textHp+'</p></div>';const myHue=player.carStats[player.currentCarId]?.color||0,myImg=document.getElementById('my-race-img');if(myImg)myImg.style.filter=myHue===0?"":"hue-rotate("+myHue+"deg)"}
         
         function startNormalRace(){
@@ -2043,8 +2132,14 @@
                 return;
             }
 
+            // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ СПИСАНИЯ БЕНЗИНА НА СТАРТЕ ---
+            window.isGameChangingData = true;
+
             player.fuel--;
             player.stats.races++;
+
+            // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+            window.isGameChangingData = false;
 
             const enemy = currentEnemies[activeIdx];
             const myHp = calculateCarHp(player.currentCarId);
@@ -2064,6 +2159,7 @@
             // Передаем в гонку: ключ твоей машины и чистый путь к картинке бота
             runVisual2DRace(win, myHp, enemy.hp, enemy.prize, isEn, player.currentCarId, enemyImgPath);
         }
+
 
 
 
@@ -2166,75 +2262,104 @@
                 ctx.restore();
             }
 
-            function finalizeRaceResults() {
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                sounds.engine.pause(); 
-                screen.style.display = 'none';
+                function finalizeRaceResults() {
+                    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                    sounds.engine.pause(); 
+                    screen.style.display = 'none';
         
-                const resModal = document.getElementById('race-modal');
-                const resText = document.getElementById('pre-race-result');
-                const confirmBtn = document.getElementById('confirm-race-btn');
-                resModal.style.display = 'flex';
+                    const resModal = document.getElementById('race-modal');
+                    const resText = document.getElementById('pre-race-result');
+                    const confirmBtn = document.getElementById('confirm-race-btn');
+                    resModal.style.display = 'flex';
         
-                // ЕСЛИ ЭТО БОСС
-                if (isBoss) {
-                    if (playerWon) {
-                        player.gold += prizeMoney; // prizeMoney тут равен b.rewardGold
-                        player.bossWins = (player.bossWins || 0) + 1;
+                    // 1. ЕСЛИ ЭТО БОСС
+                    if (isBoss) {
+                        if (playerWon) {
+                            // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ НАЧИСЛЕНИЯ НАГРАД ЗА ПОБЕДУ НАД БОССОМ ---
+                            window.isGameChangingData = true;
 
-                        const winCounter = document.querySelector('#enemy-race-card p[style*="color:#aaa"]');
-                        if (winCounter) winCounter.innerText = isEn ? 'WINS: ' + (player.bossWins) + ' / 10' : 'ПОБЕД: ' + (player.bossWins) + ' / 10';
+                            player.gold += prizeMoney; // prizeMoney тут равен b.rewardGold
+                            player.bossWins = (player.bossWins || 0) + 1;
 
-                        if (player.bossWins >= 10) {
-                            player.bossWins = 0;
-                            player.bossLvl = (player.bossLvl || 0) + 1;
-                            resText.innerHTML = isEn ? '<div style="color:#f1c40f;font-size:20px;font-weight:bold;text-transform:uppercase;margin:15px 0">Boss Defeated!<br><span style="font-size:14px;color:#fff;font-weight:normal">New boss is waiting!</span></div>' : '<div style="color:#f1c40f;font-size:20px;font-weight:bold;text-transform:uppercase;margin:15px 0">Босс побежден!<br><span style="font-size:14px;color:#fff;font-weight:normal">Новый босс ждет тебя!</span></div>';
-                            confirmBtn.innerText = isEn ? 'NEXT' : 'ДАЛЕЕ';
-                            confirmBtn.onclick = function() { if(resModal) resModal.style.display='none'; renderAll(); };
+                            // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+                            window.isGameChangingData = false;
+
+                            const winCounter = document.querySelector('#enemy-race-card p[style*="color:#aaa"]');
+                            if (winCounter) winCounter.innerText = isEn ? 'WINS: ' + (player.bossWins) + ' / 10' : 'ПОБЕД: ' + (player.bossWins) + ' / 10';
+
+                            if (player.bossWins >= 10) {
+                                // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ ПОВЫШЕНИЯ УРОВНЯ БОССА ---
+                                window.isGameChangingData = true;
+
+                                player.bossWins = 0;
+                                player.bossLvl = (player.bossLvl || 0) + 1;
+
+                                // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+                                window.isGameChangingData = false;
+
+                                resText.innerHTML = isEn ? '<div style="color:#f1c40f;font-size:20px;font-weight:bold;text-transform:uppercase;margin:15px 0">Boss Defeated!<br><span style="font-size:14px;color:#fff;font-weight:normal">New boss is waiting!</span></div>' : '<div style="color:#f1c40f;font-size:20px;font-weight:bold;text-transform:uppercase;margin:15px 0">Босс побежден!<br><span style="font-size:14px;color:#fff;font-weight:normal">Новый босс ждет тебя!</span></div>';
+                                confirmBtn.innerText = isEn ? 'NEXT' : 'ДАЛЕЕ';
+                                confirmBtn.onclick = function() { if(resModal) resModal.style.display='none'; renderAll(); };
+                            } else {
+                                resText.innerHTML = isEn ? '<span style="color:#2ecc71;font-size:18px;font-weight:bold">WIN! +' + prizeMoney + ' 💰</span>' : '<span style="color:#2ecc71;font-size:18px;font-weight:bold">ПОБЕДА! +' + prizeMoney + ' 💰</span>';
+                                confirmBtn.innerText = isEn ? 'NEXT RACE' : 'ЕЩЕ ЗАЕЗД';
+                                confirmBtn.onclick = function() { startBossBattleLogic(); };
+                            }
                         } else {
-                            resText.innerHTML = isEn ? '<span style="color:#2ecc71;font-size:18px;font-weight:bold">WIN! +' + prizeMoney + ' 💰</span>' : '<span style="color:#2ecc71;font-size:18px;font-weight:bold">ПОБЕДА! +' + prizeMoney + ' 💰</span>';
-                            confirmBtn.innerText = isEn ? 'NEXT RACE' : 'ЕЩЕ ЗАЕЗД';
+                            resText.innerHTML = isEn ? '<span style="color:#e74c3c;font-size:18px;font-weight:bold">DEFEAT!</span>' : '<span style="color:#e74c3c;font-size:18px;font-weight:bold">ПОРАЖЕНИЕ!</span>';
+                            confirmBtn.innerText = isEn ? 'REMATCH' : 'РЕВАНШ';
                             confirmBtn.onclick = function() { startBossBattleLogic(); };
                         }
-                    } else {
-                        resText.innerHTML = isEn ? '<span style="color:#e74c3c;font-size:18px;font-weight:bold">DEFEAT!</span>' : '<span style="color:#e74c3c;font-size:18px;font-weight:bold">ПОРАЖЕНИЕ!</span>';
-                        confirmBtn.innerText = isEn ? 'REMATCH' : 'РЕВАНШ';
-                        confirmBtn.onclick = function() { startBossBattleLogic(); };
-                    }
-                } 
-                // ЕСЛИ ЭТО ОБЫЧНАЯ ГОНКА
-                else {
-                    if (playerWon) {
-                        player.money += prizeMoney;
-                        player.xp += 15;
-                        player.stats.wins++;
-                        player.stats.earned += prizeMoney;
-                        resText.innerText = isEn ? "WIN! +" + prizeMoney + "$" : "ПОБЕДА! +" + prizeMoney + "$";
-                        resText.style.color = "lime";
-                    } else {
-                        player.stats.losses++;
-                        resText.innerText = isEn ? "DEFEAT!" : "ПРОИГРЫШ!";
-                        resText.style.color = "red";
+                    } 
+                    // 2. ЕСЛИ ЭТО ОБЫЧНАЯ ГОНКА
+                    else {
+                        if (playerWon) {
+                            // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ НАЧИСЛЕНИЯ НАГРАД ЗА ОБЫЧНУЮ ПОБЕДУ ---
+                            window.isGameChangingData = true;
+
+                            player.money += prizeMoney;
+                            player.xp += 15;
+                            player.stats.wins++;
+                            player.stats.earned += prizeMoney;
+
+                            // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+                            window.isGameChangingData = false;
+
+                            resText.innerText = isEn ? "WIN! +" + prizeMoney + "$" : "ПОБЕДА! +" + prizeMoney + "$";
+                            resText.style.color = "lime";
+                        } else {
+                            player.stats.losses++;
+                            resText.innerText = isEn ? "DEFEAT!" : "ПРОИГРЫШ!";
+                            resText.style.color = "red";
+                        }
+
+                        if (player.xp >= player.lvl * 200) {
+                            // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ ПОВЫШЕНИЯ УРОВНЯ И ВЫДАЧИ БОНУСА ---
+                            window.isGameChangingData = true;
+
+                            player.xp = 0;
+                            player.lvl++;
+                            player.money += 300;
+                            player.stats.earned += 300;
+
+                            // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+                            window.isGameChangingData = false;
+
+                            resText.innerHTML = isEn ? '<div style="color:#f1c40f;font-weight:bold;">NEW LEVEL! +500$</div>' : '<div style="color:#f1c40f;font-weight:bold;">НОВЫЙ УРОВЕНЬ! +500$</div>';
+                        }
+
+                        confirmBtn.innerText = isEn ? "TRY AGAIN?" : "ЕЩЁ РАЗ?";
+                        confirmBtn.style.display = 'block';
+                        confirmBtn.onclick = function() { startNormalRace() };
                     }
 
-                    if (player.xp >= player.lvl * 200) {
-                        player.xp = 0;
-                        player.lvl++;
-                        player.money += 300;
-                        player.stats.earned += 300;
-                        resText.innerHTML = isEn ? '<div style="color:#f1c40f;font-weight:bold;">NEW LEVEL! +500$</div>' : '<div style="color:#f1c40f;font-weight:bold;">НОВЫЙ УРОВЕНЬ! +500$</div>';
-                    }
-
-                    confirmBtn.innerText = isEn ? "TRY AGAIN?" : "ЕЩЁ РАЗ?";
                     confirmBtn.style.display = 'block';
-                    confirmBtn.onclick = function() { startNormalRace() };
+                    save();
+                    updateUI();
+                    if (typeof renderAll === 'function') renderAll();
                 }
 
-                confirmBtn.style.display = 'block';
-                save();
-                updateUI();
-                if (typeof renderAll === 'function') renderAll();
-            }
+
 
 
             skipBtn.onclick = function() {
@@ -2392,11 +2517,59 @@
 
             renderAll();
         }        
-        function getMaxHp(carId) { const c = carsData[carId]; let total = c.hp; Object.keys(allParts).forEach(pId => { const p = allParts[pId]; const maxLvl = p.id === 'nos_system' ? 1 : 3; total += p.baseHp * maxLvl; }); return total; }
-        function generateEnemies() { const myHp = calculateCarHp(player.currentCarId); currentEnemies = []; const keys = Object.keys(carsData); for (let i = 0; i < 3; i++) { const randomKey = keys[Math.floor(Math.random() * keys.length)]; const mod = carsData[randomKey]; const carMaxHp = getMaxHp(randomKey); let targetHp = Math.floor(myHp * (0.85 + Math.random() * 0.3)); if (targetHp > carMaxHp) { targetHp = carMaxHp; } currentEnemies.push({ name: mod.name, img: mod.img, hp: targetHp, prize: Math.floor(targetHp / 1.5), xp: 15 }); } renderAll(); }        
-        function save() { localStorage.setItem('sr_player', JSON.stringify(player)); }
-        setInterval(() => { if(player.fuel < 75){ player.fuel++; save(); updateUI(); } }, 180000);
-        generateEnemies(); updateUI();
+        
+        function getMaxHp(carId) { 
+            const c = carsData[carId]; 
+            let total = c.hp; 
+            Object.keys(allParts).forEach(pId => { 
+                const p = allParts[pId]; 
+                const maxLvl = p.id === 'nos_system' ? 1 : 3; 
+                total += p.baseHp * maxLvl; 
+            }); 
+            return total; 
+        }
+
+        function generateEnemies() { 
+            const myHp = calculateCarHp(player.currentCarId); 
+            currentEnemies = []; 
+            const keys = Object.keys(carsData); 
+            for (let i = 0; i < 3; i++) { 
+                const randomKey = keys[Math.floor(Math.random() * keys.length)]; 
+                const mod = carsData[randomKey]; 
+                const carMaxHp = getMaxHp(randomKey); 
+                let targetHp = Math.floor(myHp * (0.85 + Math.random() * 0.3)); 
+                if (targetHp > carMaxHp) { 
+                    targetHp = carMaxHp; 
+                } 
+                currentEnemies.push({ name: mod.name, img: mod.img, hp: targetHp, prize: Math.floor(targetHp / 1.5), xp: 15 }); 
+            } 
+            renderAll(); 
+        }        
+
+        function save() { 
+            localStorage.setItem('sr_player', JSON.stringify(player)); 
+        }
+
+        // ПАССИВНОЕ ВОССТАНОВЛЕНИЕ БЕНЗИНА РАЗ В 3 МИНУТЫ (ЗАЩИЩЕНО ОТ БАНА)
+        setInterval(() => { 
+            if(player.fuel < 75){ 
+        
+                // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ ПАССИВНОЙ РЕГЕНЕРАЦИИ ТОПЛИВА ---
+                window.isGameChangingData = true;
+
+                player.fuel++; 
+
+                // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+                window.isGameChangingData = false;
+
+                save(); 
+                updateUI(); 
+            } 
+        }, 180000);
+
+        generateEnemies(); 
+        updateUI();
+
                 // 1. Делаем бензин в шапке кликабельным
         document.querySelector('.header div:last-child').style.cursor = 'pointer';
         document.querySelector('.header div:last-child').onclick = function() {
@@ -2407,11 +2580,94 @@
         };
 
         // 2. Функция покупки
-        function showFuelMsg(t, e = !0) { let m = document.getElementById('fuel-message'); m.style.color = e ? "#ff4444" : "#2ecc71"; const isEn = (typeof userLang !== 'undefined' && userLang !== 'ru'); if (isEn) { if (t === "Бак уже полон!") t = "Tank is already full!"; if (t === "Бензин залит!") t = "Fuel added successfully!"; if (t === "Ошибка рекламы") t = "Ad error, try again"; if (t === "Заправлено!") t = "Refueled successfully!"; if (t === "Недостаточно денег!") t = "Not enough money!"; if (t === "Недостаточно золота!") t = "Not enough gold!"; if (t.indexOf("Бак увеличен до") === 0) { t = t.replace("Бак увеличен до", "Tank upgraded to").replace("л!", "L!"); } } m.innerText = t; setTimeout(() => { m.innerText = ""; }, 4000); }
-        function showFuelAd() { let m = player.maxFuel || 75; if (player.fuel >= m) return showFuelMsg("Бак уже полон!"); if (typeof ysdk !== 'undefined') ysdk.adv.showRewardedVideo({ callbacks: { onRewarded: () => { player.fuel = Math.min(m, player.fuel + 5); saveAndRefresh(); showFuelMsg("Бензин залит!", !1); }, onError: () => showFuelMsg("Ошибка рекламы") } }); }
-        function buyFuel(a, c) { let m = player.maxFuel || 75; if (player.fuel >= m) return showFuelMsg("Бак уже полон!"); if (player.money >= c) { player.money -= c; player.fuel = Math.min(m, player.fuel + a); saveAndRefresh(); showFuelMsg("Заправлено!", !1); } else showFuelMsg("Недостаточно денег!"); }
-        function upgradeTank() { let c = 500; if (player.gold >= c) { player.gold -= c; player.maxFuel = (player.maxFuel || 75) + 15; saveAndRefresh(); showFuelMsg("Бак увеличен до " + player.maxFuel + "л!", !1); } else showFuelMsg("Недостаточно золота!"); }
-        function saveAndRefresh() { if(typeof save === "function") save(); else if(typeof saveGame === "function") saveGame(); if(typeof updateUI === "function") updateUI(); updateFuelUI(); }
+        function showFuelMsg(t, e = !0) { 
+            let m = document.getElementById('fuel-message'); 
+            m.style.color = e ? "#ff4444" : "#2ecc71"; 
+            const isEn = (typeof userLang !== 'undefined' && userLang !== 'ru'); 
+            if (isEn) { 
+                if (t === "Бак уже полон!") t = "Tank is already full!"; 
+                if (t === "Бензин залит!") t = "Fuel added successfully!"; 
+                if (t === "Ошибка рекламы") t = "Ad error, try again"; 
+                if (t === "Заправлено!") t = "Refueled successfully!"; 
+                if (t === "Недостаточно денег!") t = "Not enough money!"; 
+                if (t === "Недостаточно золота!") t = "Not enough gold!"; 
+                if (t.indexOf("Бак увеличен до") === 0) { 
+                    t = t.replace("Бак увеличен до", "Tank upgraded to").replace("л!", "L!"); 
+                } 
+            } 
+            m.innerText = t; 
+            setTimeout(() => { m.innerText = ""; }, 4000); 
+        }
+
+        function showFuelAd() { 
+            let m = player.maxFuel || 75; 
+            if (player.fuel >= m) return showFuelMsg("Бак уже полон!"); 
+            if (typeof ysdk !== 'undefined') {
+                ysdk.adv.showRewardedVideo({ 
+                    callbacks: { 
+                        onRewarded: () => { 
+                    
+                            // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ НАЧИСЛЕНИЯ ТОПЛИВА ЗА РЕКЛАМУ ---
+                            window.isGameChangingData = true;
+
+                            player.fuel = Math.min(m, player.fuel + 5); 
+
+                            // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+                            window.isGameChangingData = false;
+
+                            saveAndRefresh(); 
+                            showFuelMsg("Бензин залит!", !1); 
+                        }, 
+                        onError: () => showFuelMsg("Ошибка рекламы") 
+                    } 
+                }); 
+            } 
+        }
+
+        function buyFuel(a, c) { 
+            let m = player.maxFuel || 75; 
+            if (player.fuel >= m) return showFuelMsg("Бак уже полон!"); 
+            if (player.money >= c) { 
+        
+                // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ ПОКУПКИ ТОПЛИВА ЗА БАКСЫ ---
+                window.isGameChangingData = true;
+
+                player.money -= c; 
+                player.fuel = Math.min(m, player.fuel + a); 
+
+                // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+                window.isGameChangingData = false;
+
+                saveAndRefresh(); 
+                showFuelMsg("Заправлено!", !1); 
+            } else showFuelMsg("Недостаточно денег!"); 
+        }
+
+        function upgradeTank() { 
+            let c = 500; 
+            if (player.gold >= c) { 
+        
+                // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ УЛУЧШЕНИЯ ОБЪЁМА БАКА ЗА ЗОЛОТО ---
+                window.isGameChangingData = true;
+
+                player.gold -= c; 
+                player.maxFuel = (player.maxFuel || 75) + 15; 
+
+                // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+                window.isGameChangingData = false;
+
+                saveAndRefresh(); 
+                showFuelMsg("Бак увеличен до " + player.maxFuel + "л!", !1); 
+            } else showFuelMsg("Недостаточно золота!"); 
+        }
+
+        function saveAndRefresh() { 
+            if(typeof save === "function") save(); 
+            else if(typeof saveGame === "function") saveGame(); 
+            if(typeof updateUI === "function") updateUI(); 
+            updateFuelUI(); 
+        }
+
 
 
         function openBossRace(){
@@ -2466,7 +2722,69 @@
 
 
         // Новая логика для кнопки внутри окна
-function processBossRaceLogic(){const b=window.currentEnemy;const isEn=(typeof userLang!=='undefined'&&userLang!=='ru');if(player.fuel<15){alert(isEn?"Need fuel ⛽":"Нужен бензин ⛽");return}player.gold-=b.fee;player.fuel-=15;updateUI();if(window.playSfx)playSfx('engine');const resDiv=document.getElementById('pre-race-result');const btn=document.getElementById('confirm-race-btn');btn.style.display='none';resDiv.innerText=isEn?'Racing...':'Заезд...';setTimeout(()=>{const myHp=calculateCarHp(player.currentCarId);const win=Math.random()<(myHp/(myHp+b.hp));if(win){player.gold+=b.rewardGold;player.bossWins++;resDiv.innerHTML=isEn?`<span style="color:#2ecc71">WIN! +${b.rewardGold} 💰</span>`:`<span style="color:#2ecc71">ПОБЕДА! +${b.rewardGold} 💰</span>`;if(player.bossWins>=10){player.bossWins=0;player.bossLvl++;alert(isEn?"BOSS DEFEATED!":"БОСС ПОВЕРЖЕН!")}}else{resDiv.innerHTML=isEn?`<span style="color:#e74c3c">DEFEAT!</span>`:`<span style="color:#e74c3c">ПОРАЖЕНИЕ!</span>`}btn.style.display='block';btn.innerText=isEn?'AGAIN?':'ЕЩЕ?';btn.onclick=function(){openBossRace()};save();updateUI();renderAll()},1500)}
+function processBossRaceLogic(){
+    const b=window.currentEnemy;
+    const isEn=(typeof userLang!=='undefined'&&userLang!=='ru');
+    if(player.fuel<15){
+        alert(isEn?"Need fuel ⛽":"Нужен бензин ⛽");
+        return;
+    }
+
+    // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ СПИСАНИЯ ЗОЛОТА И БЕНЗИНА НА СТАРТЕ ---
+    window.isGameChangingData = true;
+
+    player.gold-=b.fee;
+    player.fuel-=15;
+
+    // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+    window.isGameChangingData = false;
+
+    updateUI();
+    if(window.playSfx)playSfx('engine');
+    const resDiv=document.getElementById('pre-race-result');
+    const btn=document.getElementById('confirm-race-btn');
+    btn.style.display='none';
+    resDiv.innerText=isEn?'Racing...':'Заезд...';
+    
+    setTimeout(()=>{
+        const myHp=calculateCarHp(player.currentCarId);
+        const win=Math.random()<(myHp/(myHp+b.hp));
+        if(win){
+            
+            // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ НАЧИСЛЕНИЯ НАГРАДЫ ЗА ПОБЕДУ ---
+            window.isGameChangingData = true;
+
+            player.gold+=b.rewardGold;
+            player.bossWins++;
+
+            // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+            window.isGameChangingData = false;
+
+            resDiv.innerHTML=isEn?`<span style="color:#2ecc71">WIN! +${b.rewardGold} 💰</span>`:`<span style="color:#2ecc71">ПОБЕДА! +${b.rewardGold} 💰</span>`;
+            if(player.bossWins>=10){
+                
+                // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ ПОВЫШЕНИЯ УРОВНЯ БОССА ---
+                window.isGameChangingData = true;
+
+                player.bossWins=0;
+                player.bossLvl++;
+
+                // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+                window.isGameChangingData = false;
+
+                alert(isEn?"BOSS DEFEATED!":"БОСС ПОВЕРЖЕН!");
+            }
+        }else{
+            resDiv.innerHTML=isEn?`<span style="color:#e74c3c">DEFEAT!</span>`:`<span style="color:#e74c3c">ПОРАЖЕНИЕ!</span>`;
+        }
+        btn.style.display='block';
+        btn.innerText=isEn?'AGAIN?':'ЕЩЕ?';
+        btn.onclick=function(){openBossRace()};
+        save();
+        updateUI();
+        renderAll();
+    },1500);
+}
 
 
 function startBossBattleLogic(){
@@ -2493,9 +2811,16 @@ function startBossBattleLogic(){
 
     if (typeof playSfx === 'function') playSfx('engine');
 
+    // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ СПИСАНИЯ ЗОЛОТА И БЕНЗИНА НА СТАРТЕ БОЙЦА ---
+    window.isGameChangingData = true;
+
     // ТВОЁ ОРИГИНАЛЬНОЕ СПИСАНИЕ РЕСУРСОВ ЗА БОССА
     player.gold -= b.fee;
     player.fuel -= 15;
+
+    // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+    window.isGameChangingData = false;
+
     updateUI();
 
     document.getElementById('race-modal').style.display = 'none';
@@ -2517,14 +2842,62 @@ function startBossBattleLogic(){
     runVisual2DRace(win, myHp, b.hp, b.rewardGold, isEn, player.currentCarId, bossImgPath, true);
 }
 
+
 function sellCurrentCar() { const modal = document.getElementById('sell-modal'); const content = document.getElementById('sell-content'); const error = document.getElementById('sell-error'); const success = document.getElementById('sell-success'); modal.style.display = 'flex'; content.style.display = 'none'; error.style.display = 'none'; success.style.display = 'none'; if (player.ownedCars.length <= 1) { error.style.display = 'block'; } else { content.style.display = 'block'; const carId = player.currentCarId; const c = carsData[carId]; let finalMoney = Math.floor(c.price * 0.7); let finalGold = 0; if (player.carStats && player.carStats[carId] && player.carStats[carId].parts) { const partsOwned = player.carStats[carId].parts; allParts.forEach(p => { const curLvl = partsOwned[p.id] || 0; if (curLvl > 0) { let totalSpentOnPart = 0; for (let i = 1; i <= curLvl; i++) { totalSpentOnPart += p.basePrice * c.priceMult * i; } let refund = Math.floor(totalSpentOnPart * 0.5); if (p.isGold) { finalGold += refund; } else { finalMoney += refund; } } }); } document.getElementById('sell-text').innerText = "Продать " + c.name + "?"; let priceDisplay = finalMoney.toLocaleString() + " $"; if (finalGold > 0) { priceDisplay += " + " + finalGold.toLocaleString() + " 💰"; } document.getElementById('sell-price-display').innerText = priceDisplay; window.currentSellPrice = finalMoney; window.currentSellGold = finalGold; } }
-function confirmSale() { const id = player.currentCarId; const c = carsData[id]; const finalMoney = window.currentSellPrice || Math.floor(c.price * 0.7); const finalGold = window.currentSellGold || 0; if (c.isGold) { player.gold += finalMoney + finalGold; } else { player.money += finalMoney; player.gold += finalGold; } player.ownedCars = player.ownedCars.filter(car => car !== id); if (player.carStats[id]) { delete player.carStats[id]; } player.currentCarId = player.ownedCars[0]; save(); updateUI(); renderAll(); document.getElementById('sell-content').style.display = 'none'; document.getElementById('sell-success').style.display = 'block'; }
+function confirmSale() { 
+    const id = player.currentCarId; 
+    const c = carsData[id]; 
+    const finalMoney = window.currentSellPrice || Math.floor(c.price * 0.7); 
+    const finalGold = window.currentSellGold || 0; 
+    
+    // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ ЛЕГАЛЬНОЙ ПРОДАЖИ И УДАЛЕНИЯ МАШИНЫ ---
+    window.isGameChangingData = true;
+
+    if (c.isGold) { 
+        player.gold += finalMoney + finalGold; 
+    } else { 
+        player.money += finalMoney; 
+        player.gold += finalGold; 
+    } 
+    player.ownedCars = player.ownedCars.filter(car => car !== id); 
+    if (player.carStats[id]) { 
+        delete player.carStats[id]; 
+    } 
+    player.currentCarId = player.ownedCars[0]; 
+
+    // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+    window.isGameChangingData = false;
+
+    save(); 
+    updateUI(); 
+    renderAll(); 
+    document.getElementById('sell-content').style.display = 'none'; 
+    document.getElementById('sell-success').style.display = 'block'; 
+}
 function closeSellModal() { document.getElementById('sell-modal').style.display = 'none'; document.getElementById('sell-content').style.display = 'block'; document.getElementById('sell-success').style.display = 'none'; showScreen('garage'); }  
 
 function previewWheels(wheelId){window.tempWheelId=wheelId;if(typeof playSfx==='function')playSfx('click');const f=document.getElementById('wheel-front'),b=document.getElementById('wheel-back');if(f&&b){if(wheelId==='stock'){f.style.display=b.style.display='none';}else{f.style.display=b.style.display='block';const url="url('images/"+wheelId+".png')",size=f.offsetWidth+"px";f.style.backgroundImage=b.style.backgroundImage=url;f.style.height=b.style.height=size;f.style.borderRadius=b.style.borderRadius='50%';f.style.backgroundSize=b.style.backgroundSize='90%';f.style.backgroundRepeat=b.style.backgroundRepeat='no-repeat';f.style.backgroundPosition=b.style.backgroundPosition='center';f.style.backgroundColor=b.style.backgroundColor='#111';f.style.border=b.style.border='none';f.style.boxShadow=b.style.boxShadow='0 0 10px rgba(0,0,0,0.8)';}}renderAll();}
 
 
-function confirmWheels(id) { const w = allWheels.find(i => i.id === id); if (w.isGold ? player.gold < w.price : player.money < w.price) return alert("Недостаточно средств!"); w.isGold ? player.gold -= w.price : player.money -= w.price; if(!player.carStats[player.currentCarId]) player.carStats[player.currentCarId] = {parts:{}}; player.carStats[player.currentCarId].wheels = id; save(); updateUI(); renderAll(); }
+function confirmWheels(id) { 
+    const w = allWheels.find(i => i.id === id); 
+    if (w.isGold ? player.gold < w.price : player.money < w.price) return alert("Недостаточно средств!"); 
+    
+    // --- ОТКРЫВАЕМ АНТИЧИТ ДЛЯ ПОКУПКИ И УСТАНОВКИ ДИСКОВ ---
+    window.isGameChangingData = true;
+
+    w.isGold ? player.gold -= w.price : player.money -= w.price; 
+    
+    if(!player.carStats[player.currentCarId]) player.carStats[player.currentCarId] = {parts:{}}; 
+    player.carStats[player.currentCarId].wheels = id; 
+
+    // --- ЗАКРЫВАЕМ АНТИЧИТ ОБРАТНО ---
+    window.isGameChangingData = false;
+
+    save(); 
+    updateUI(); 
+    renderAll(); 
+}
 
 function applyWheels(container, carId) { const carData = carsData[carId]; const stats = player.carStats[carId]; container.querySelectorAll('.wheel').forEach(w => w.remove()); if (!carData || !stats || !stats.wheels || stats.wheels === 'stock') return; const wPos = carData.wPos || { fL: 64, bL: 18, t: 65, s: 15 }; const wheelId = stats.wheels; ['f', 'b'].forEach(type => { const w = document.createElement('div'); w.className = 'wheel wheel-' + type; w.style.position = 'absolute'; w.style.zIndex = '100'; w.style.backgroundImage = 'url(images/' + wheelId + '.png)'; w.style.backgroundSize = 'contain'; w.style.backgroundRepeat = 'no-repeat'; w.style.backgroundPosition = 'center'; w.style.left = (type === 'f' ? wPos.fL : wPos.bL) + '%'; w.style.top = wPos.t + '%'; w.style.width = w.style.height = wPos.s + '%'; container.appendChild(w); }); } 
 
