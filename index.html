@@ -715,7 +715,7 @@
             <div class="tuning-menu" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
                 <button class="btn-action" onclick="setTuningTab('parts')">ДЕТАЛИ</button>
                 <button class="btn-action" onclick="setTuningTab('color')">ЦВЕТ</button>
-                <button class="btn-action" style="display: none;" onclick="setTuningTab('wheels')">ДИСКИ</button>
+                <button class="btn-action" onclick="setTuningTab('wheels')">ДИСКИ</button>
                 <button class="btn-action" onclick="setTuningTab('other')">ДРУГОЕ</button>
             </div>
             
@@ -1142,14 +1142,11 @@
         }
 
         // ==========================================
-        // ФУНКЦИЯ ОТРИСОВКИ АДМИН-ПАНЕЛИ (ПЕРЕТАСКИВАЕМАЯ)
-        // ==========================================
         function openShieldAdminPanel() {
             if (document.getElementById('shield-admin-panel')) return;
 
             const adminDiv = document.createElement('div');
             adminDiv.id = 'shield-admin-panel';
-            // Добавили touch-action: none и user-select: none для корректного драг-энд-дропа
             adminDiv.style = `
                 position: fixed; top: 20px; right: 20px; background: rgba(15, 15, 15, 0.98); 
                 border: 2px solid #f1c40f; padding: 25px; border-radius: 10px; z-index: 999999; 
@@ -1158,12 +1155,10 @@
             `;
 
             adminDiv.innerHTML = `
-                <!-- ШАПКА ПАНЕЛИ (ЗОНА ДЛЯ ПЕРЕТАСКИВАНИЯ) -->
                 <div id="adm-drag-handle" style="cursor: move; margin: -25px -25px 20px -25px; padding: 15px 25px; background: #222; border-bottom: 1px solid #333; border-top-left-radius: 8px; border-top-right-radius: 8px; position: relative;">
                     <h3 style="margin: 0; color: #f1c40f; text-align: center; text-transform: uppercase; letter-spacing: 1px; font-size: 16px;">
                         🛡️ SHIELD PANEL 🛡️
                     </h3>
-                    <!-- КРЕСТИК ДЛЯ ЗАКРЫТИЯ ПАНЕЛИ -->
                     <span id="adm-close-btn" style="position: absolute; right: 15px; top: 12px; color: #ff3333; cursor: pointer; font-weight: bold; font-size: 20px;">&times;</span>
                 </div>
         
@@ -1181,117 +1176,75 @@
         
                 <hr style="border: 0; border-top: 1px solid #333; margin-bottom: 15px;">
         
-                <!-- ГЕНЕРАТОР КОДОВ РАЗБАНА -->
-                <h4 style="margin: 0 0 10px 0; color: #2ecc71; text-transform: uppercase; font-size: 13px;">Создать код разбана</h4>
-                <input id="adm-new-promo" type="text" placeholder="Придумайте код..." style="width: 100%; background: #222; color: #fff; border: 1px solid #444; padding: 6px; border-radius: 4px; margin-bottom: 8px; box-sizing: border-box;">
-                <button id="adm-gen-promo" style="width: 100%; background: #2ecc71; color: #fff; border: none; padding: 8px; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; margin-bottom: 15px;">
-                    Добавить в базу разбана
-                </button>
+                <!-- АВТОГЕНЕРАТОР КОДОВ РАЗБАНА -->
+                <h4 style="margin: 0 0 10px 0; color: #2ecc71; text-transform: uppercase; font-size: 13px;">Генератор кодов разбана</h4>
         
-                <div style="font-size: 12px; color: #aaa; background: #111; padding: 10px; border-radius: 4px; border: 1px solid #222; max-height: 80px; overflow-y: auto;">
-                    <strong>Активные коды:</strong> <span id="adm-promo-list" style="color: #2ecc71; word-break: break-all;">[]</span>
-                </div>
+                <!-- Сюда будет выводиться готовый ключ -->
+                <input id="adm-generated-key" type="text" readonly placeholder="Здесь появится ключ..." style="width: 100%; background: #111; color: #f1c40f; border: 1px solid #333; padding: 8px; border-radius: 4px; margin-bottom: 8px; box-sizing: border-box; text-align: center; font-weight: bold; font-size: 15px; letter-spacing: 1px;">
+        
+                <button id="adm-lazy-gen" style="width: 100%; background: #2ecc71; color: #fff; border: none; padding: 8px; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; margin-bottom: 15px;">
+                    ⚡ Сгенерировать ключ
+                </button>
             `;
     
             document.body.appendChild(adminDiv);
-            updateAdminPromoListUI();
 
-            // ==========================================
-            // ЛОГИКА БЕЗОПАСНОГО ПЕРЕТАСКИВАНИЯ (POINTER EVENTS)
-            // ==========================================
+            // Логика перетаскивания (Pointer Events)
             const dragHandle = document.getElementById('adm-drag-handle');
-            let isDragging = false;
-            let startX, startY;
+            let isDragging = false, startX, startY;
 
             dragHandle.addEventListener('pointerdown', function(e) {
-                // Если кликнули строго по крестику закрытия — не начинаем тащить
                 if (e.target.id === 'adm-close-btn') return;
-        
                 isDragging = true;
-                // Запоминаем стартовую позицию мыши относительно левого верхнего угла панели
                 startX = e.clientX - adminDiv.getBoundingClientRect().left;
                 startY = e.clientY - adminDiv.getBoundingClientRect().top;
                 dragHandle.setPointerCapture(e.pointerId);
             });
-
             dragHandle.addEventListener('pointermove', function(e) {
                 if (!isDragging) return;
-                // Плавно меняем координаты панели на экране
                 adminDiv.style.left = (e.clientX - startX) + 'px';
                 adminDiv.style.top = (e.clientY - startY) + 'px';
-                adminDiv.style.right = 'auto'; // Сбрасываем правый край, чтобы не растягивало
+                adminDiv.style.right = 'auto';
             });
-
             dragHandle.addEventListener('pointerup', function(e) {
                 isDragging = false;
                 dragHandle.releasePointerCapture(e.pointerId);
             });
 
-            // ==========================================
-            // КНОПКА "ПРИМЕНИТЬ РЕСУРСЫ"
-            // ==========================================
+            // Кнопка применения ресурсов
             document.getElementById('adm-apply').onclick = function() {
                 window.isAdminAction = true;
-        
-                const m = parseInt(document.getElementById('adm-money').value);
-                const g = parseInt(document.getElementById('adm-gold').value);
-                const l = parseInt(document.getElementById('adm-lvl').value);
-                const f = parseInt(document.getElementById('adm-fuel').value);
-        
-                if (!isNaN(m)) player.money = m;
-                if (!isNaN(g)) player.gold = g;
-                if (!isNaN(l)) player.lvl = l;
-                if (!isNaN(f)) player.fuel = f;
-        
+                const m = parseInt(document.getElementById('adm-money').value), g = parseInt(document.getElementById('adm-gold').value), l = parseInt(document.getElementById('adm-lvl').value), f = parseInt(document.getElementById('adm-fuel').value);
+                if (!isNaN(m)) player.money = m; if (!isNaN(g)) player.gold = g; if (!isNaN(l)) player.lvl = l; if (!isNaN(f)) player.fuel = f;
                 if (document.getElementById('moneyText')) document.getElementById('moneyText').innerText = player.money.toLocaleString();
                 if (document.getElementById('goldText')) document.getElementById('goldText').innerText = player.gold.toLocaleString();
                 if (document.getElementById('fuelText')) document.getElementById('fuelText').innerText = Math.floor(player.fuel);
                 if (document.getElementById('lvlText')) document.getElementById('lvlText').innerText = player.lvl;
-        
-                if (typeof save === "function") save();
-                if (typeof updateFuelUI === "function") updateFuelUI();
-        
+                if (typeof save === "function") save(); if (typeof updateFuelUI === "function") updateFuelUI();
                 window.isAdminAction = false;
-        
                 const statusText = document.getElementById('adm-status-text');
-                if (statusText) {
-                    statusText.innerText = "✓ Ресурсы изменены!";
-                    statusText.style.display = 'block';
-                    setTimeout(() => { statusText.style.display = 'none'; }, 3000);
-                }
+                if (statusText) { statusText.innerText = "✓ Ресурсы изменены!"; statusText.style.display = 'block'; setTimeout(() => { statusText.style.display = 'none'; }, 3000); }
             };
 
-            // ==========================================
-            // КНОПКА "ДОБАВИТЬ В БАЗУ РАЗБАНА"
-            // ==========================================
-            document.getElementById('adm-gen-promo').onclick = function() {
-                const promoInput = document.getElementById('adm-new-promo');
-                const newCode = promoInput.value.trim().toLowerCase();
-                if (!newCode) return;
-
-                let currentCodes = JSON.parse(localStorage.getItem('acs_active_promos') || "[]");
-                if (!currentCodes.includes(newCode)) {
-                    currentCodes.push(newCode);
-                    localStorage.setItem('acs_active_promos', JSON.stringify(currentCodes));
-                    updateAdminPromoListUI();
-            
-                    const statusText = document.getElementById('adm-status-text');
-                    if (statusText) {
-                        statusText.innerText = `✓ Код "${newCode}" активен!`;
-                        statusText.style.display = 'block';
-                        setTimeout(() => { statusText.style.display = 'none'; }, 3000);
-                    }
-                    promoInput.value = '';
-                }
+            // МАТЕМАТИЧЕСКАЯ ГЕНЕРАЦИЯ СЛУЧАЙНОГО КЛЮЧА
+            document.getElementById('adm-lazy-gen').onclick = function() {
+                // Генерируем случайное число от 1000 до 9999
+                const randomNum = Math.floor(Math.random() * 9000) + 1000;
+        
+                // Наша секретная формула: складываем цифры числа и умножаем на секретный множитель (например, 7)
+                const digitsSum = randomNum.toString().split('').reduce((a, b) => parseInt(a) + parseInt(b), 0);
+                const secretCheck = (digitsSum * 7).toString(16).toUpperCase(); // переводим в шестнадцатеричный код
+        
+                // Собираем красивый гоночный ключ разбана (например, SHIELD-4815-A4)
+                const finalKey = `SHIELD-${randomNum}-${secretCheck}`;
+        
+                // Выводим в поле для копирования
+                document.getElementById('adm-generated-key').value = finalKey;
             };
 
-            // ==========================================
-            // КРЕСТИК ЗАКРЫТИЯ
-            // ==========================================
-            document.getElementById('adm-close-btn').onclick = function() {
-                adminDiv.remove();
-            };
+            document.getElementById('adm-close-btn').onclick = function() { adminDiv.remove(); };
         }
+
 
         function updateAdminPromoListUI() {
             const listSpan = document.getElementById('adm-promo-list');
@@ -1748,7 +1701,7 @@
 
 
                 
-                else if (currentTab === 'wheels') { if(wheelsDiv) wheelsDiv.style.display = 'none'; shopDiv.style.display = 'flex'; shopDiv.innerHTML = '<h2 style="color:#555; width:100%; text-align:center; margin-top:50px;">В РАЗРАБОТКЕ</h2>'; }
+
 
                 //раздел дисков
                 else if (currentTab === 'wheels') {
@@ -1929,15 +1882,14 @@
 
         //АНТИЧИТ
         function triggerBan(reason) {
-            // ЖЁСТКИЙ ЗАМОК: Подменяем функцию сохранения.
-            // Теперь игра читера не сможет сделать автосохранение поверх бана при закрытии вкладки.
+            // ЖЁСТКИЙ ЗАМОК: Блокируем стандартную запись в localStorage для игры и консоли.
             localStorage.setItem = function() { return false; };
 
             // УМНАЯ ОЧИСТКА: Перебираем все ключи в памяти браузера
             const allKeys = Object.keys(localStorage);
             for (let key of allKeys) {
-                // Стираем прогресс читера, но НЕ трогаем метку бана и вашу базу админских промокодов!
-                if (key !== 'game_device_banned' && key !== 'acs_active_promos') {
+                // Стираем прогресс читера, но НЕ трогаем метку бана и базу ИСПОЛЬЗОВАННЫХ кодов!
+                if (key !== 'game_device_banned' && key !== 'acs_used_keys') {
                     localStorage.removeItem(key);
                 }
             }
@@ -1964,15 +1916,16 @@
                     <!-- Форма ввода кода восстановления доступа -->
                     <div id="unban-box" style="display: none; background: #111; padding: 20px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px;">
                         <div style="color: #bbb; margin-bottom: 10px; font-size: 14px;">Режим восстановления доступа</div>
-                        <input type="password" id="unban-input" placeholder="Введите секретный промокод..." style="
+                        <input type="text" id="unban-input" placeholder="Введите ключ SHIELD-XXXX-XX..." style="
                             background: #222; color: #fff; border: 1px solid #444; padding: 8px 12px; 
                             border-radius: 4px; outline: none; text-align: center; font-size: 16px; margin-right: 10px;
+                            width: 220px; font-weight: bold; letter-spacing: 1px;
                         ">
                         <button id="unban-btn" style="
                             background: #ff3333; color: #fff; border: none; padding: 8px 16px; 
                             border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold;
                         ">ОК</button>
-                        <div id="unban-error" style="color: #ff3333; font-size: 12px; margin-top: 8px; display: none;">Неверный код разблокировки!</div>
+                        <div id="unban-error" style="color: #ff3333; font-size: 12px; margin-top: 8px; display: none;">Неверный или уже использованный ключ!</div>
                     </div>
 
                     <div style="font-size: 14px; color: #444;">
@@ -1993,35 +1946,48 @@
                 }
             });
 
-            // Обработчик проверки промокода на разбан
+            // Обработчик проверки математического промокода на разбан
             document.body.addEventListener('click', function(e) {
                 if (e.target && e.target.id === 'unban-btn') {
                     const codeInput = document.getElementById('unban-input');
                     const errorDiv = document.getElementById('unban-error');
-                    const typedCode = codeInput.value.trim().toLowerCase();
+                    const typedCode = codeInput.value.trim().toUpperCase(); // Переводим в верхний регистр (SHIELD-...)
 
-                    // Достаём список кодов, созданных вами ранее в Админ-панели
-                    let currentActivePromos = JSON.parse(localStorage.getItem('acs_active_promos') || "[]");
-            
-                    // Проверяем, есть ли этот код в нашей базе
-                    if (currentActivePromos.includes(typedCode)) { 
+                    // 1. ПРОВЕРКА СТРУКТУРЫ КЛЮЧА (Должен быть формат SHIELD-ЧИСЛО-ХВОСТ)
+                    const parts = typedCode.split('-');
+                    if (parts.length !== 3 || parts[0] !== 'SHIELD') {
+                        if (errorDiv) errorDiv.style.display = 'block';
+                        codeInput.value = '';
+                        return;
+                    }
+
+                    const randomNum = parts[1];
+                    const clientCheck = parts[2];
+
+                    // 2. МАТЕМАТИЧЕСКАЯ ПРОВЕРКА ПОДЛИННОСТИ КЛЮЧА
+                    const digitsSum = randomNum.split('').reduce((a, b) => parseInt(a) + parseInt(b), 0);
+                    const validCheck = (digitsSum * 7).toString(16).toUpperCase();
+
+                    // Достаём список уже использованных кодов на этом конкретном ПК
+                    let usedKeys = JSON.parse(localStorage.getItem('acs_used_keys') || "[]");
+
+                    // 3. ПРОВЕРКА: Если математика сошлась И код еще не использовался на этом ПК
+                    if (clientCheck === validCheck && !usedKeys.includes(typedCode)) { 
                 
-                        // СНАЧАЛА ВОЗВРАЩАЕМ СТАНДАРТНЫЙ SETITEM НА МЕСТО (Снимаем замок с записи)
+                        // СНАЧАЛА СНИМАЕМ ЗАМОК С ПАМЯТИ
                         delete localStorage.setItem; 
                 
-                        // 1. УДАЛЯЕМ ИСПОЛЬЗОВАННЫЙ КОД ИЗ МАССИВА НАВСЕГДА
-                        currentActivePromos = currentActivePromos.filter(c => c !== typedCode);
-                
-                        // 2. ТЕПЕРЬ БРАУЗЕР СПОКОЙНО И НАМЕРТВО ЗАПИШЕТ ОБНОВЛЕННЫЙ МАССИВ В ПАМЯТЬ
-                        localStorage.setItem('acs_active_promos', JSON.stringify(currentActivePromos));
+                        // Заносим этот код в чёрный список использованных на этом ПК, чтобы он стал одноразовым!
+                        usedKeys.push(typedCode);
+                        localStorage.setItem('acs_used_keys', JSON.stringify(usedKeys));
 
-                        // Снимаем блокировку устройства
+                        // Полностью снимаем метку бана устройства
                         localStorage.removeItem('game_device_banned');
                 
-                        // Перезагружаем игру чистой
+                        // Перезагружаем чистую игру
                         location.reload();
                     } else {
-                        // Если кода нет в базе — показываем ошибку
+                        // Если код поддельный или уже активирован ранее — выдаем ошибку
                         if (errorDiv) errorDiv.style.display = 'block';
                         codeInput.value = '';
                     }
@@ -2030,6 +1996,7 @@
     
             throw new Error("Halt: Banned by SHIELD ANTICHEAT");
         }
+
 
 
         function nextCar() { playSfx('click'); let idx = player.ownedCars.indexOf(player.currentCarId); idx = (idx + 1) % player.ownedCars.length; player.currentCarId = player.ownedCars[idx]; save(); updateUI(); }
