@@ -1924,17 +1924,24 @@
                 }
 
                 // 4. ОТРИСОВКА МАШИН
+                const carHeight = 150; // Фиксированная высота для всех машин
+
                 if (playerCarImg.complete && playerCarImg.naturalWidth !== 0) {
-                    ctx.drawImage(playerCarImg, playerX, playerY, 100, 155);
+                    // Вычисляем ширину пропорционально высоте
+                    const playerWidth = carHeight * (playerCarImg.naturalWidth / playerCarImg.naturalHeight);
+                    ctx.drawImage(playerCarImg, playerX, playerY, playerWidth, carHeight);
                 } else {
-                    ctx.fillStyle = '#3498db'; ctx.fillRect(playerX, playerY, 100, 155);
+                    ctx.fillStyle = '#3498db'; ctx.fillRect(playerX, playerY, 100, carHeight);
                 }
         
                 if (enemyCarImg.complete && enemyCarImg.naturalWidth !== 0) {
-                    ctx.drawImage(enemyCarImg, enemyX, enemyY, 100, 155);
+                    // Вычисляем ширину пропорционально высоте
+                    const enemyWidth = carHeight * (enemyCarImg.naturalWidth / enemyCarImg.naturalHeight);
+                    ctx.drawImage(enemyCarImg, enemyX, enemyY, enemyWidth, carHeight);
                 } else {
-                    ctx.fillStyle = '#e74c3c'; ctx.fillRect(enemyX, enemyY, 100, 155);
+                    ctx.fillStyle = '#e74c3c'; ctx.fillRect(enemyX, enemyY, 100, carHeight);
                 }
+
 
                 animationFrameId = requestAnimationFrame(gameLoop);
             }
