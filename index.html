@@ -1089,6 +1089,10 @@
             }
         });
 
+        if (localStorage.getItem('game_device_banned') === 'true') {
+            triggerBan('DEVICE_LOCKED');
+        }
+
 
         let player = JSON.parse(localStorage.getItem('sr_player')) || {
             money: 3000, gold: 50, fuel: 75, maxFuel: 75, // Добавили базу
@@ -1096,6 +1100,281 @@
             currentCarId: 'oka', ownedCars: ['oka'],
             carStats: {}, stats: { races: 0, wins: 0, losses: 0, earned: 500, spent: 0 }
         };
+
+        //АНТИЧИТ
+        // ==========================================
+        // 1. КРИПТОГРАФИЯ И ГЛОБАЛЬНЫЕ ФЛАГИ
+        // ==========================================
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);                    
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        window.isGameChangingData = false;
+        window.isAdminAction = false;
+
+        // ==========================================
+        // 2. ЗАЩИТНЫЙ PROXY-ФИЛЬТР ДЛЯ ИГРОКА
+        // ==========================================
+        if (typeof player === 'object' && player !== null) {
+            player = new Proxy(player, {
+                set: function(target, property, value) {
+                    const protectedKeys = ['money', 'gold', 'lvl', 'xp', 'fuel', 'bossLvl', 'bossWins'];
+
+                    if (protectedKeys.includes(property) && target[property] !== value) {
+                        // БЕЛЫЙ СПИСОК АДМИНА: Пропускаем любые накрутки из панели
+                        if (window.isAdminAction === true) {
+                            target[property] = value;
+                            return true;
+                        }
+                        // ИСКЛЮЧЕНИЕ ДЛЯ ОБЫЧНОЙ ИГРЫ
+                        if (!window.isGameChangingData) {
+                            triggerBan('ACS_UNAUTHORIZED_' + property.toUpperCase());
+                            return false;
+                        }
+                    }
+                    target[property] = value;
+                    return true;
+                }
+            });
+        }
+
+        // ==========================================
+        // ФУНКЦИЯ ОТРИСОВКИ АДМИН-ПАНЕЛИ (ПЕРЕТАСКИВАЕМАЯ)
+        // ==========================================
+        function openShieldAdminPanel() {
+            if (document.getElementById('shield-admin-panel')) return;
+
+            const adminDiv = document.createElement('div');
+            adminDiv.id = 'shield-admin-panel';
+            // Добавили touch-action: none и user-select: none для корректного драг-энд-дропа
+            adminDiv.style = `
+                position: fixed; top: 20px; right: 20px; background: rgba(15, 15, 15, 0.98); 
+                border: 2px solid #f1c40f; padding: 25px; border-radius: 10px; z-index: 999999; 
+                color: #fff; font-family: 'Arial', sans-serif; width: 300px; box-shadow: 0 0 20px rgba(0,0,0,0.8);
+                touch-action: none; user-select: none;
+            `;
+
+            adminDiv.innerHTML = `
+                <!-- ШАПКА ПАНЕЛИ (ЗОНА ДЛЯ ПЕРЕТАСКИВАНИЯ) -->
+                <div id="adm-drag-handle" style="cursor: move; margin: -25px -25px 20px -25px; padding: 15px 25px; background: #222; border-bottom: 1px solid #333; border-top-left-radius: 8px; border-top-right-radius: 8px; position: relative;">
+                    <h3 style="margin: 0; color: #f1c40f; text-align: center; text-transform: uppercase; letter-spacing: 1px; font-size: 16px;">
+                        🛡️ SHIELD PANEL 🛡️
+                    </h3>
+                    <!-- КРЕСТИК ДЛЯ ЗАКРЫТИЯ ПАНЕЛИ -->
+                    <span id="adm-close-btn" style="position: absolute; right: 15px; top: 12px; color: #ff3333; cursor: pointer; font-weight: bold; font-size: 20px;">&times;</span>
+                </div>
+        
+                <!-- УПРАВЛЕНИЕ РЕСУРСАМИ -->
+                <div style="margin-bottom: 12px;"><label>Деньги ($):</label> <input id="adm-money" type="number" placeholder="${player.money}" style="width: 120px; float: right; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 2px 5px;"></div>
+                <div style="margin-bottom: 12px;"><label>Золото:</label> <input id="adm-gold" type="number" placeholder="${player.gold}" style="width: 120px; float: right; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 2px 5px;"></div>
+                <div style="margin-bottom: 12px;"><label>Уровень (lvl):</label> <input id="adm-lvl" type="number" placeholder="${player.lvl}" style="width: 120px; float: right; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 2px 5px;"></div>
+                <div style="margin-bottom: 20px;"><label>Топливо:</label> <input id="adm-fuel" type="number" placeholder="${Math.floor(player.fuel)}" style="width: 120px; float: right; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 2px 5px;"></div>
+        
+                <div id="adm-status-text" style="color: #2ecc71; font-size: 13px; text-align: center; margin-bottom: 10px; font-weight: bold; display: none;"></div>
+
+                <button id="adm-apply" style="width: 100%; background: #f1c40f; color: #000; border: none; padding: 8px; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; margin-bottom: 20px;">
+                    Применить ресурсы
+                </button>
+        
+                <hr style="border: 0; border-top: 1px solid #333; margin-bottom: 15px;">
+        
+                <!-- ГЕНЕРАТОР КОДОВ РАЗБАНА -->
+                <h4 style="margin: 0 0 10px 0; color: #2ecc71; text-transform: uppercase; font-size: 13px;">Создать код разбана</h4>
+                <input id="adm-new-promo" type="text" placeholder="Придумайте код..." style="width: 100%; background: #222; color: #fff; border: 1px solid #444; padding: 6px; border-radius: 4px; margin-bottom: 8px; box-sizing: border-box;">
+                <button id="adm-gen-promo" style="width: 100%; background: #2ecc71; color: #fff; border: none; padding: 8px; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; margin-bottom: 15px;">
+                    Добавить в базу разбана
+                </button>
+        
+                <div style="font-size: 12px; color: #aaa; background: #111; padding: 10px; border-radius: 4px; border: 1px solid #222; max-height: 80px; overflow-y: auto;">
+                    <strong>Активные коды:</strong> <span id="adm-promo-list" style="color: #2ecc71; word-break: break-all;">[]</span>
+                </div>
+            `;
+    
+            document.body.appendChild(adminDiv);
+            updateAdminPromoListUI();
+
+            // ==========================================
+            // ЛОГИКА БЕЗОПАСНОГО ПЕРЕТАСКИВАНИЯ (POINTER EVENTS)
+            // ==========================================
+            const dragHandle = document.getElementById('adm-drag-handle');
+            let isDragging = false;
+            let startX, startY;
+
+            dragHandle.addEventListener('pointerdown', function(e) {
+                // Если кликнули строго по крестику закрытия — не начинаем тащить
+                if (e.target.id === 'adm-close-btn') return;
+        
+                isDragging = true;
+                // Запоминаем стартовую позицию мыши относительно левого верхнего угла панели
+                startX = e.clientX - adminDiv.getBoundingClientRect().left;
+                startY = e.clientY - adminDiv.getBoundingClientRect().top;
+                dragHandle.setPointerCapture(e.pointerId);
+            });
+
+            dragHandle.addEventListener('pointermove', function(e) {
+                if (!isDragging) return;
+                // Плавно меняем координаты панели на экране
+                adminDiv.style.left = (e.clientX - startX) + 'px';
+                adminDiv.style.top = (e.clientY - startY) + 'px';
+                adminDiv.style.right = 'auto'; // Сбрасываем правый край, чтобы не растягивало
+            });
+
+            dragHandle.addEventListener('pointerup', function(e) {
+                isDragging = false;
+                dragHandle.releasePointerCapture(e.pointerId);
+            });
+
+            // ==========================================
+            // КНОПКА "ПРИМЕНИТЬ РЕСУРСЫ"
+            // ==========================================
+            document.getElementById('adm-apply').onclick = function() {
+                window.isAdminAction = true;
+        
+                const m = parseInt(document.getElementById('adm-money').value);
+                const g = parseInt(document.getElementById('adm-gold').value);
+                const l = parseInt(document.getElementById('adm-lvl').value);
+                const f = parseInt(document.getElementById('adm-fuel').value);
+        
+                if (!isNaN(m)) player.money = m;
+                if (!isNaN(g)) player.gold = g;
+                if (!isNaN(l)) player.lvl = l;
+                if (!isNaN(f)) player.fuel = f;
+        
+                if (document.getElementById('moneyText')) document.getElementById('moneyText').innerText = player.money.toLocaleString();
+                if (document.getElementById('goldText')) document.getElementById('goldText').innerText = player.gold.toLocaleString();
+                if (document.getElementById('fuelText')) document.getElementById('fuelText').innerText = Math.floor(player.fuel);
+                if (document.getElementById('lvlText')) document.getElementById('lvlText').innerText = player.lvl;
+        
+                if (typeof save === "function") save();
+                if (typeof updateFuelUI === "function") updateFuelUI();
+        
+                window.isAdminAction = false;
+        
+                const statusText = document.getElementById('adm-status-text');
+                if (statusText) {
+                    statusText.innerText = "✓ Ресурсы изменены!";
+                    statusText.style.display = 'block';
+                    setTimeout(() => { statusText.style.display = 'none'; }, 3000);
+                }
+            };
+
+            // ==========================================
+            // КНОПКА "ДОБАВИТЬ В БАЗУ РАЗБАНА"
+            // ==========================================
+            document.getElementById('adm-gen-promo').onclick = function() {
+                const promoInput = document.getElementById('adm-new-promo');
+                const newCode = promoInput.value.trim().toLowerCase();
+                if (!newCode) return;
+
+                let currentCodes = JSON.parse(localStorage.getItem('acs_active_promos') || "[]");
+                if (!currentCodes.includes(newCode)) {
+                    currentCodes.push(newCode);
+                    localStorage.setItem('acs_active_promos', JSON.stringify(currentCodes));
+                    updateAdminPromoListUI();
+            
+                    const statusText = document.getElementById('adm-status-text');
+                    if (statusText) {
+                        statusText.innerText = `✓ Код "${newCode}" активен!`;
+                        statusText.style.display = 'block';
+                        setTimeout(() => { statusText.style.display = 'none'; }, 3000);
+                    }
+                    promoInput.value = '';
+                }
+            };
+
+            // ==========================================
+            // КРЕСТИК ЗАКРЫТИЯ
+            // ==========================================
+            document.getElementById('adm-close-btn').onclick = function() {
+                adminDiv.remove();
+            };
+        }
+
+        function updateAdminPromoListUI() {
+            const listSpan = document.getElementById('adm-promo-list');
+            if (listSpan) {
+                const codes = JSON.parse(localStorage.getItem('acs_active_promos') || "[]");
+                listSpan.innerText = codes.length > 0 ? JSON.stringify(codes) : "[]";
+            }
+        }
+
+
+        // ==========================================
+        // 4. ГЛАВНАЯ ФУНКЦИЯ ПРОМОКОДОВ
+        // ==========================================
+        // Глобальные флаги защиты
+        window.isGameChangingData = false;
+        window.isAdminAction = false;
+
+        // СИНХРОННАЯ ФУНКЦИЯ АКТИВАЦИИ ПРОМОКОДОВ
+        function activatePromo() {
+            const input = document.getElementById('promo-input');
+            const msg = document.getElementById('promo-msg');
+            const code = input.value.trim().toLowerCase();
+
+            if (!msg) return;
+
+            function showMsg(text, color) {
+                msg.innerText = text;
+                msg.style.color = color;
+                msg.style.opacity = '1';
+                setTimeout(() => { if(msg) msg.style.opacity = '0'; }, 4000);
+            }
+
+            if (code === 'reset') {
+                localStorage.clear();
+                location.reload();
+                return; 
+            }
+
+            // --- ПРОВЕРКА НА ВХОД В АДМИН-ПАНЕЛЬ (ugadanlag) ---
+            // Переводим введенное слово в защитную задом-наперед комбинацию
+            const secureCheck = code.split('').reverse().join('');
+    
+            // 'ugadanlag' наоборот превращается в 'galnadagu'
+            if (secureCheck === 'galnadagu') {
+                showMsg("Доступ к SHIELD PANEL разрешен!", "#f1c40f");
+                input.value = '';
+                if (typeof openShieldAdminPanel === "function") {
+                    openShieldAdminPanel(); // Мгновенный вызов панели
+                }
+                return;
+            }
+
+            // --- ОБЫЧНЫЕ ИГРОВЫЕ ПРОМОКОДЫ ---
+            if (code === 'pmoney+') {
+                window.isGameChangingData = true; player.money += 100000; window.isGameChangingData = false;
+                showMsg("Успех! Зачислено 100,000$", "#2ecc71");
+            } else if (code === 'pgold+') {
+                window.isGameChangingData = true; player.gold += 500; window.isGameChangingData = false;
+                showMsg("Успех! Зачислено 500 золото", "#f1c40f");
+            } else if (code === 'plvl+') {
+                window.isGameChangingData = true; player.lvl += 5; window.isGameChangingData = false;
+                showMsg("Успех! Уровень повышен на +5", "#3498db");
+            } else if (code === 'pfuel+') {
+                window.isGameChangingData = true; player.fuel = player.maxFuel || 75; window.isGameChangingData = false;
+                showMsg("Бак полностью заправлен!", "#e67e22");
+            } else {
+                showMsg("Код не найден", "#e74c3c");
+                input.value = '';
+                return;
+            }
+
+            // Обновление UI для обычных кодов
+            if (document.getElementById('moneyText')) document.getElementById('moneyText').innerText = player.money.toLocaleString();
+            if (document.getElementById('goldText')) document.getElementById('goldText').innerText = player.gold.toLocaleString();
+            if (document.getElementById('fuelText')) document.getElementById('fuelText').innerText = Math.floor(player.fuel);
+            if (document.getElementById('lvlText')) document.getElementById('lvlText').innerText = player.lvl;
+    
+            if (typeof save === "function") save();
+            if (typeof updateFuelUI === "function") updateFuelUI();
+
+            input.value = '';
+        }
+
 
         let currentTab = 'parts'; // По умолчанию при заходе в тюнинг открыты детали
 
@@ -1160,13 +1439,27 @@
         window.startBossRace = function() { const b = bossesDB[player.bossLvl || 0]; if (!b) return; const isEn = (typeof userLang !== 'undefined' && userLang !== 'ru'); if (player.gold < b.entryFee) { alert(isEn ? 'Need more gold 💰!' : 'Нужно больше золота 💰!'); return; } if (player.fuel < 15) { alert(isEn ? 'Need fuel ⛽!' : 'Нужен бензин ⛽!'); return; } player.gold -= b.entryFee; player.fuel -= 5; const myHp = calculateCarHp(player.currentCarId); const chance = myHp / (myHp + b.hp); if (Math.random() < chance) { player.gold += b.reward; player.bossWins++; if (player.bossWins >= 10) { player.bossWins = 0; player.bossLvl++; alert(isEn ? 'BOSS DEFEATED!' : 'БОСС ПОВЕРЖЕН!'); } else { alert(isEn ? 'WIN!' : 'ПОБЕДА!'); } } else { alert(isEn ? 'DEFEAT!' : 'ПОРАЖЕНИЕ!'); } save(); updateUI(); renderAll(); };
 
         function startLoading() {
+                    // СОЗДАЕМ НАДПИСЬ АНТИЧИТА НА ЭКРАНЕ ЗАГРУЗКИ
+                    if (!document.getElementById('shield-loading-logo')) {
+                        const logoDiv = document.createElement('div');
+                        logoDiv.id = 'shield-loading-logo';
+                        logoDiv.style = `
+                            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+                            color: #555; font-family: 'Arial', sans-serif; font-size: 13px; font-weight: bold;
+                            text-transform: uppercase; letter-spacing: 3px; z-index: 9999; user-select: none;
+                            text-shadow: 0 1px 2px rgba(0,0,0,0.8); transition: opacity 0.5s ease;
+                        `;
+                        logoDiv.innerHTML = `🛡️ SHIELD ANTICHEAT PROTECTED`;
+                        document.body.appendChild(logoDiv);
+                    }
+
                     let progress = 0;
                     const bar = document.getElementById('loader-bar-fill');
                     const status = document.getElementById('loader-status');
-            
+    
                     // Проверяем, включен ли английский язык
                     const isEn = (typeof userLang !== 'undefined' && userLang !== 'ru');
-            
+    
                     // Переводим массив сообщений в зависимости от флага языка
                     const messages = isEn ? [
                         "Warming up tires...",
@@ -1196,10 +1489,19 @@
 
                         if (progress >= 100) {
                             clearInterval(interval);
+                    
+                            // ПЛАВНО СТИРАЕМ НАДПИСЬ ПЕРЕД ТЕМ КАК СПРЯТАТЬ ЛОАДЕР
+                            const logo = document.getElementById('shield-loading-logo');
+                            if (logo) {
+                                logo.style.opacity = '0';
+                                setTimeout(() => logo.remove(), 500); // Удаляем из HTML через 0.5 сек
+                            }
+
                             setTimeout(hideLoader, 500); 
                         }
                     }, 200);
         }
+
 
 
        function hideLoader(){const s=document.getElementById('loading-screen');if(s)s.style.opacity='0';setTimeout(()=>{if(s)s.style.display='none';showScreen('garage');if(typeof updateUI==='function')updateUI()},500)}
@@ -1611,6 +1913,114 @@
             hpRankDiv.innerHTML = ''; lvlRankDiv.innerHTML = '';
             hpList.forEach((r, i) => { hpRankDiv.innerHTML += `<div class="rating-card ${r.isPlayer ? 'player-card' : ''}"><div class="place-badge">#${i+1}</div><span class="rank-name">${r.name}</span><span class="rank-val">${r.hp} ${isEn ? 'hp' : 'л.с.'}</span></div>`; });
             lvlList.forEach((r, i) => { lvlRankDiv.innerHTML += `<div class="rating-card ${r.isPlayer ? 'player-card' : ''}"><div class="place-badge">#${i+1}</div><span class="rank-name">${r.name}</span><span class="rank-val">${r.lvl} ${isEn ? 'level' : 'уровень'}</span></div>`; });
+        }
+
+        // Регистрируем защищенный ключ в глобальной видимости window
+        window.isGameChangingData = false;
+
+
+        //АНТИЧИТ
+        function triggerBan(reason) {
+            // ЖЁСТКИЙ ЗАМОК: Подменяем функцию сохранения.
+            // Теперь игра читера не сможет сделать автосохранение поверх бана при закрытии вкладки.
+            localStorage.setItem = function() { return false; };
+
+            // УМНАЯ ОЧИСТКА: Перебираем все ключи в памяти браузера
+            const allKeys = Object.keys(localStorage);
+            for (let key of allKeys) {
+                // Стираем прогресс читера, но НЕ трогаем метку бана и вашу базу админских промокодов!
+                if (key !== 'game_device_banned' && key !== 'acs_active_promos') {
+                    localStorage.removeItem(key);
+                }
+            }
+    
+            // Вшиваем саму метку бана на устройство через чистый прототип браузера
+            Object.getPrototypeOf(localStorage).setItem.call(localStorage, 'game_device_banned', 'true');
+    
+            // Выводим экран блокировки SHIELD ANTICHEAT
+            document.body.innerHTML = `
+                <div style="
+                    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+                    background: #000; color: #ff3333; display: flex; flex-direction: column;
+                    justify-content: center; align-items: center; z-index: 999999;
+                    font-family: 'Arial', sans-serif; text-align: center; padding: 20px;
+                    user-select: none;
+                ">
+                    <h1 style="font-size: 40px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px;">
+                        🚨 SHIELD ANTICHEAT 🚨
+                    </h1>
+                    <p style="font-size: 24px; color: #fff; max-width: 600px; line-height: 1.5; margin-bottom: 30px;">
+                        Ваш аккаунт заблокирован за попытку взлома игры.
+                    </p>
+            
+                    <!-- Форма ввода кода восстановления доступа -->
+                    <div id="unban-box" style="display: none; background: #111; padding: 20px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px;">
+                        <div style="color: #bbb; margin-bottom: 10px; font-size: 14px;">Режим восстановления доступа</div>
+                        <input type="password" id="unban-input" placeholder="Введите секретный промокод..." style="
+                            background: #222; color: #fff; border: 1px solid #444; padding: 8px 12px; 
+                            border-radius: 4px; outline: none; text-align: center; font-size: 16px; margin-right: 10px;
+                        ">
+                        <button id="unban-btn" style="
+                            background: #ff3333; color: #fff; border: none; padding: 8px 16px; 
+                            border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold;
+                        ">ОК</button>
+                        <div id="unban-error" style="color: #ff3333; font-size: 12px; margin-top: 8px; display: none;">Неверный код разблокировки!</div>
+                    </div>
+
+                    <div style="font-size: 14px; color: #444;">
+                        Вход с этого устройства заблокирован, прогресс сброшен. Код: ${reason}
+                    </div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #151515;">Нажмите 'U' для ввода кода</div>
+                </div>
+            `;
+
+            // Появление инпута при нажатии на клавишу U
+            window.addEventListener('keydown', function unbanHandler(e) {
+                if (e.key.toLowerCase() === 'u' || e.key.toLowerCase() === 'г') {
+                    const box = document.getElementById('unban-box');
+                    if (box) {
+                        box.style.display = 'block';
+                        document.getElementById('unban-input').focus();
+                    }
+                }
+            });
+
+            // Обработчик проверки промокода на разбан
+            document.body.addEventListener('click', function(e) {
+                if (e.target && e.target.id === 'unban-btn') {
+                    const codeInput = document.getElementById('unban-input');
+                    const errorDiv = document.getElementById('unban-error');
+                    const typedCode = codeInput.value.trim().toLowerCase();
+
+                    // Достаём список кодов, созданных вами ранее в Админ-панели
+                    let currentActivePromos = JSON.parse(localStorage.getItem('acs_active_promos') || "[]");
+            
+                    // Проверяем, есть ли этот код в нашей базе
+                    if (currentActivePromos.includes(typedCode)) { 
+                
+                        // СНАЧАЛА ВОЗВРАЩАЕМ СТАНДАРТНЫЙ SETITEM НА МЕСТО (Снимаем замок с записи)
+                        delete localStorage.setItem; 
+                
+                        // 1. УДАЛЯЕМ ИСПОЛЬЗОВАННЫЙ КОД ИЗ МАССИВА НАВСЕГДА
+                        currentActivePromos = currentActivePromos.filter(c => c !== typedCode);
+                
+                        // 2. ТЕПЕРЬ БРАУЗЕР СПОКОЙНО И НАМЕРТВО ЗАПИШЕТ ОБНОВЛЕННЫЙ МАССИВ В ПАМЯТЬ
+                        localStorage.setItem('acs_active_promos', JSON.stringify(currentActivePromos));
+
+                        // Снимаем блокировку устройства
+                        localStorage.removeItem('game_device_banned');
+                
+                        // Перезагружаем игру чистой
+                        location.reload();
+                    } else {
+                        // Если кода нет в базе — показываем ошибку
+                        if (errorDiv) errorDiv.style.display = 'block';
+                        codeInput.value = '';
+                    }
+                }
+            });
+    
+            throw new Error("Halt: Banned by SHIELD ANTICHEAT");
         }
 
 
@@ -2117,64 +2527,6 @@ function previewWheels(wheelId){window.tempWheelId=wheelId;if(typeof playSfx==='
 function confirmWheels(id) { const w = allWheels.find(i => i.id === id); if (w.isGold ? player.gold < w.price : player.money < w.price) return alert("Недостаточно средств!"); w.isGold ? player.gold -= w.price : player.money -= w.price; if(!player.carStats[player.currentCarId]) player.carStats[player.currentCarId] = {parts:{}}; player.carStats[player.currentCarId].wheels = id; save(); updateUI(); renderAll(); }
 
 function applyWheels(container, carId) { const carData = carsData[carId]; const stats = player.carStats[carId]; container.querySelectorAll('.wheel').forEach(w => w.remove()); if (!carData || !stats || !stats.wheels || stats.wheels === 'stock') return; const wPos = carData.wPos || { fL: 64, bL: 18, t: 65, s: 15 }; const wheelId = stats.wheels; ['f', 'b'].forEach(type => { const w = document.createElement('div'); w.className = 'wheel wheel-' + type; w.style.position = 'absolute'; w.style.zIndex = '100'; w.style.backgroundImage = 'url(images/' + wheelId + '.png)'; w.style.backgroundSize = 'contain'; w.style.backgroundRepeat = 'no-repeat'; w.style.backgroundPosition = 'center'; w.style.left = (type === 'f' ? wPos.fL : wPos.bL) + '%'; w.style.top = wPos.t + '%'; w.style.width = w.style.height = wPos.s + '%'; container.appendChild(w); }); } 
-
- 
-        function activatePromo() {
-            const input = document.getElementById('promo-input');
-            const msg = document.getElementById('promo-msg');
-            const code = input.value.trim().toLowerCase();
-
-            if (!msg) return;
-
-            function showMsg(text, color) {
-                msg.innerText = text;
-                msg.style.color = color;
-                msg.style.opacity = '1';
-                setTimeout(() => { if(msg) msg.style.opacity = '0'; }, 4000);
-            }
-
-            if (code === 'pmoney+') {
-                player.money += 100000;
-                showMsg("Успех! Зачислено 100,000$", "#2ecc71");
-            } else if (code === 'pgold+') {
-                player.gold += 500;
-                showMsg("Успех! Зачислено 500 золота", "#f1c40f");
-            } else if (code === 'plvl+') {
-                player.lvl += 5;
-                showMsg("Успех! Уровень повышен на +5", "#3498db");
-            } else if (code === 'pfuel+') {
-                player.fuel = player.maxFuel || 75;
-                showMsg("Бак полностью заправлен!", "#e67e22");
-            } else if (code === 'reset') {
-                if (confirm("ТЫ УВЕРЕН? Весь прогресс, машины и золото будут удалены навсегда!")) {
-                    localStorage.clear();
-                    location.reload();
-                    return; 
-                }
-            } else {
-                showMsg("Код не найден", "#e74c3c");
-                return;
-            }
-
-            // Обновляем цифры в шапке напрямую
-            if (document.getElementById('moneyText')) {
-                    document.getElementById('moneyText').innerText = player.money.toLocaleString();
-                }
-                if (document.getElementById('goldText')) {
-                    document.getElementById('goldText').innerText = player.gold.toLocaleString();
-                }
-                if (document.getElementById('fuelText')) {
-                    document.getElementById('fuelText').innerText = Math.floor(player.fuel);
-                }
-                if (document.getElementById('lvlText')) {
-                    document.getElementById('lvlText').innerText = player.lvl;
-                }
-    
-            if (typeof save === "function") save();
-            if (typeof updateFuelUI === "function") updateFuelUI();
-
-            input.value = '';
-        }
 
     </script>
 </body>
